@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card"
 import type { Goal } from "@/types"
 import useSWR from "swr"
+import { toast } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
 
@@ -39,6 +40,7 @@ export function GoalsView({ initialGoals }: { initialGoals: Goal[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: form.title.trim(), target: Number(form.target) }),
       })
+      toast.success("Meta criada", { description: form.title.trim() })
       setForm({ title: "", target: "" })
       revalidate()
     } finally {
@@ -47,12 +49,24 @@ export function GoalsView({ initialGoals }: { initialGoals: Goal[] }) {
   }
 
   async function handleUpdateProgress(id: string, done: number) {
+    const goal = goals.find((g) => g.id === id)
+    const prev = goal?.done ?? 0
+    const target = goal?.target ?? 0
+    const capped = Math.max(0, Math.min(done, target))
+
     await fetch(`/api/goals/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done }),
+      body: JSON.stringify({ done: capped }),
     })
     revalidate()
+
+    if (goal && capped >= target && prev < target) {
+      toast.success("Meta atingida!", {
+        description: goal.title,
+        duration: 6000,
+      })
+    }
   }
 
   async function handleDelete(id: string) {

@@ -4,6 +4,8 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { SessionProvider } from "@/components/layout/session-provider"
 import { SWRProvider } from "@/components/layout/swr-provider"
+import { Toaster } from "@/components/ui/sonner"
+import { StudyAlerts } from "@/components/layout/study-alerts"
 
 const inter = Inter({
   variable: "--font-sans",
@@ -36,6 +38,8 @@ export default function RootLayout({
           <SWRProvider>
             <ThemeProvider>
               {children}
+              <Toaster />
+              <StudyAlerts />
             </ThemeProvider>
           </SWRProvider>
         </SessionProvider>

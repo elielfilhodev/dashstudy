@@ -35,6 +35,7 @@ import {
 } from "@/lib/date-utils"
 import type { AgendaItem } from "@/types"
 import useSWR from "swr"
+import { toast } from "sonner"
 
 type SubjectRef = { id: string; name: string }
 type Mode = "semana" | "mes"
@@ -126,16 +127,25 @@ export function AgendaView({
       }
 
       if (editingId) {
+        const prev = items.find((i) => i.id === editingId)
         await fetch(`/api/agenda/${editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         })
+        if (prev && form.done && !prev.done) {
+          toast.success("Atividade concluída", {
+            description: form.title.trim(),
+          })
+        }
       } else {
         await fetch("/api/agenda", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
+        })
+        toast.success("Compromisso adicionado", {
+          description: `${form.title.trim()} · ${form.date} ${form.time}`,
         })
       }
       revalidate()

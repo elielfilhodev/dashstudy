@@ -111,17 +111,20 @@ export async function POST(request: NextRequest) {
     const newXp = gamification.xp + earned
     const newTotalCompletions = gamification.totalCompletions + 1
 
+    const newAchievementKeys: string[] = []
+    const achievementKeySet = new Set(gamification!.achievements.map((a) => a.key))
+
     const unlockIfNeeded = async (key: string) => {
-      const exists = gamification!.achievements.find((a) => a.key === key)
-      if (!exists) {
-        await db.achievement.create({
-          data: {
-            gamificationId: gamification!.id,
-            key,
-            unlockedAt: todayKey,
-          },
-        })
-      }
+      if (achievementKeySet.has(key)) return
+      await db.achievement.create({
+        data: {
+          gamificationId: gamification!.id,
+          key,
+          unlockedAt: todayKey,
+        },
+      })
+      achievementKeySet.add(key)
+      newAchievementKeys.push(key)
     }
 
     const newLevelInfo = levelFromXp(newXp)
@@ -157,6 +160,7 @@ export async function POST(request: NextRequest) {
         newLevel: newLevelInfo.level,
         streakDays: newStreak,
       },
+      newAchievementKeys,
     })
   } catch (err) {
     return serverError(err)

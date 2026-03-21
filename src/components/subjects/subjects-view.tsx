@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import type { Subject } from "@/types"
 import useSWR from "swr"
+import { toast } from "sonner"
 
 const SUBJECT_COLORS = [
   "#18181b", "#dc2626", "#2563eb", "#16a34a",
@@ -48,6 +49,7 @@ export function SubjectsView({ initialSubjects }: { initialSubjects: Subject[] }
           color: form.color,
         }),
       })
+      toast.success("Matéria adicionada", { description: form.name.trim() })
       setForm({ name: "", workload: "", color: SUBJECT_COLORS[0] })
       revalidate()
     } finally {
@@ -55,13 +57,20 @@ export function SubjectsView({ initialSubjects }: { initialSubjects: Subject[] }
     }
   }
 
-  async function handleProgressChange(id: string, progress: number) {
+  async function handleProgressChange(id: string, progress: number, previousProgress: number) {
     await fetch(`/api/subjects/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ progress }),
     })
     revalidate()
+    if (progress >= 100 && previousProgress < 100) {
+      const s = subjects.find((x) => x.id === id)
+      toast.success("Matéria completa!", {
+        description: s ? `${s.name} — 100% de progresso.` : "100% de progresso.",
+        duration: 5500,
+      })
+    }
   }
 
   async function handleDelete(id: string) {
@@ -173,7 +182,9 @@ export function SubjectsView({ initialSubjects }: { initialSubjects: Subject[] }
                   max={100}
                   step={5}
                   value={subject.progress}
-                  onChange={(e) => handleProgressChange(subject.id, Number(e.target.value))}
+                  onChange={(e) =>
+                    handleProgressChange(subject.id, Number(e.target.value), subject.progress)
+                  }
                   className="w-full accent-foreground cursor-pointer"
                 />
               </CardContent>

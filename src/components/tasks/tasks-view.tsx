@@ -22,8 +22,10 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { formatDate } from "@/lib/date-utils"
+import { ACHIEVEMENTS } from "@/lib/gamification"
 import type { Task } from "@/types"
 import useSWR from "swr"
+import { toast } from "sonner"
 
 type SubjectRef = { id: string; name: string }
 
@@ -84,6 +86,7 @@ export function TasksView({
           subjectId: form.subjectId || null,
         }),
       })
+      toast.success("Tarefa criada", { description: form.title.trim() })
       setForm(emptyForm)
       revalidate()
     } finally {
@@ -96,11 +99,39 @@ export function TasksView({
 
     if (willComplete) {
       // XP must be awarded BEFORE marking done — API checks task.done to prevent double rewards
-      await fetch("/api/gamification", {
+      const gamRes = await fetch("/api/gamification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId: task.id }),
       })
+      const gamJson = await gamRes.json()
+      const payload = gamJson.data as
+        | { skipped?: boolean; reward?: { xpEarned: number; leveledUp: boolean; newLevel: number }; newAchievementKeys?: string[] }
+        | undefined
+
+      if (payload && !payload.skipped) {
+        toast.success("Tarefa concluída", {
+          description: task.title,
+        })
+        if (payload.reward?.xpEarned != null && payload.reward.xpEarned > 0) {
+          toast.message(`+${payload.reward.xpEarned} XP`, {
+            id: `xp-${task.id}-${Date.now()}`,
+          })
+        }
+        if (payload.reward?.leveledUp) {
+          toast.success("Subiu de nível!", {
+            description: `Agora você é nível ${payload.reward.newLevel}.`,
+          })
+        }
+        const keys = payload.newAchievementKeys ?? []
+        for (const key of keys) {
+          const meta = ACHIEVEMENTS[key]
+          toast.success(meta?.label ?? "Nova conquista", {
+            description: meta?.description ?? key,
+            duration: 6000,
+          })
+        }
+      }
     }
 
     await fetch(`/api/tasks/${task.id}`, {
