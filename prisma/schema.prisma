@@ -1,0 +1,175 @@
+// Dash Estudos — Prisma Schema
+// Neon Postgres serverless via @prisma/adapter-neon
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js required tables
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // bcrypt hash — null for OAuth users
+  provider      String    @default("email")
+  githubUsername String?
+
+  accounts      Account[]
+  sessions      Session[]
+
+  subjects      Subject[]
+  agendaItems   AgendaItem[]
+  goals         Goal[]
+  tasks         Task[]
+  gamification  Gamification?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// App domain tables
+// ---------------------------------------------------------------------------
+
+model Subject {
+  id        String  @id @default(cuid())
+  userId    String
+  name      String
+  workload  Int     // hours per week
+  progress  Int     @default(0) // 0–100
+  color     String  @default("#18181b")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agendaItems AgendaItem[]
+  tasks       Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgendaItem {
+  id        String   @id @default(cuid())
+  userId    String
+  subjectId String?
+
+  title     String
+  date      String   // ISO 8601 date string (YYYY-MM-DD)
+  time      String   // HH:MM
+  location  String   @default("Nao definido")
+  done      Boolean  @default(false)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Goal {
+  id     String @id @default(cuid())
+  userId String
+
+  title  String
+  target Int
+  done   Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id        String  @id @default(cuid())
+  userId    String
+  subjectId String?
+
+  title   String
+  details String  @default("")
+  dueDate String  // ISO 8601 date string
+  done    Boolean @default(false)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Gamification {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  xp                 Int      @default(0)
+  totalCompletions   Int      @default(0)
+  streakDays         Int      @default(0)
+  bestStreak         Int      @default(0)
+  lastCompletionDate String?
+
+  weeklyMilestones   Int[]
+  monthlyMilestones  Int[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  achievements Achievement[]
+
+  updatedAt DateTime @updatedAt
+}
+
+model Achievement {
+  id               String @id @default(cuid())
+  gamificationId   String
+  key              String
+  unlockedAt       String // ISO date string
+
+  gamification Gamification @relation(fields: [gamificationId], references: [id], onDelete: Cascade)
+
+  @@unique([gamificationId, key])
+}
