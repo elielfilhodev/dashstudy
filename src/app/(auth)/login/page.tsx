@@ -57,7 +57,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">Entrar</CardTitle>
-          <CardDescription>Acesse sua conta no Dash Estudos</CardDescription>
+          <CardDescription>Acesse sua conta no Dash Estudos 🚀</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
