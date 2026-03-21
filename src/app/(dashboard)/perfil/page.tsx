@@ -9,10 +9,16 @@ export default async function PerfilPage() {
 
   const userId = session.user.id
 
-  const gamification = await db.gamification.findUnique({
-    where: { userId },
-    include: { achievements: { orderBy: { unlockedAt: "desc" } } },
-  })
+  const [gamification, userRecord] = await Promise.all([
+    db.gamification.findUnique({
+      where: { userId },
+      include: { achievements: { orderBy: { unlockedAt: "desc" } } },
+    }),
+    db.user.findUnique({
+      where: { id: userId },
+      select: { username: true, displayId: true },
+    }),
+  ])
 
   return (
     <ProfileView
@@ -20,6 +26,8 @@ export default async function PerfilPage() {
         name: session.user.name ?? "Usuário",
         email: session.user.email ?? "",
         image: session.user.image ?? null,
+        username: userRecord?.username ?? null,
+        displayId: userRecord?.displayId ?? userId.slice(0, 6).toUpperCase(),
       }}
       gamification={gamification}
     />

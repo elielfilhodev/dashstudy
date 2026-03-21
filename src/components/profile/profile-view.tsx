@@ -8,10 +8,17 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { levelFromXp, rankFromLevel, ACHIEVEMENTS, RANK_THRESHOLDS } from "@/lib/gamification"
+import { FriendsCard } from "@/components/friends/friends-card"
 import type { Achievement, Gamification } from "@/types"
 
 interface Props {
-  user: { name: string; email: string; image: string | null }
+  user: {
+    name: string
+    email: string
+    image: string | null
+    username: string | null
+    displayId: string
+  }
   gamification: Gamification | null
 }
 
@@ -51,7 +58,14 @@ export function ProfileView({ user, gamification }: Props) {
       </div>
 
       {/* User card */}
-      <Card className={cn(isEliteRank && "border-2", rank.key === "mestre" && "border-red-500/50", rank.key === "grao-mestre" && "border-purple-500/50", rank.key === "genio" && "border-yellow-500/50")}>
+      <Card
+        className={cn(
+          isEliteRank && "border-2",
+          rank.key === "mestre" && "border-red-500/50",
+          rank.key === "grao-mestre" && "border-purple-500/50",
+          rank.key === "genio" && "border-yellow-500/50"
+        )}
+      >
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             {/* Avatar with elite border */}
@@ -68,6 +82,9 @@ export function ProfileView({ user, gamification }: Props) {
             <div className="text-center sm:text-left flex-1">
               <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                 <h2 className="text-xl font-bold">{user.name}</h2>
+                {user.username && (
+                  <span className="text-sm text-muted-foreground">@{user.username}</span>
+                )}
                 {streakActive && (
                   <div className="flex items-center gap-1 text-orange-500 text-sm font-medium">
                     <Flame className="size-4" />
@@ -75,7 +92,9 @@ export function ProfileView({ user, gamification }: Props) {
                   </div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-xs text-muted-foreground/70 font-mono mt-0.5">
+                #{user.displayId.slice(0, 6).toUpperCase()}
+              </p>
               <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start flex-wrap">
                 <Badge className={cn("text-xs", rank.className)}>
                   {rank.icon} {rank.label}
@@ -93,7 +112,9 @@ export function ProfileView({ user, gamification }: Props) {
               <span className="text-muted-foreground flex items-center gap-1">
                 <Zap className="size-3" /> XP para próximo nível
               </span>
-              <span className="font-medium">{levelInfo.currentXp} / {levelInfo.nextLevelXp}</span>
+              <span className="font-medium">
+                {levelInfo.currentXp} / {levelInfo.nextLevelXp}
+              </span>
             </div>
             <Progress value={(levelInfo.currentXp / levelInfo.nextLevelXp) * 100} className="h-2" />
           </div>
@@ -109,6 +130,9 @@ export function ProfileView({ user, gamification }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Friends card */}
+      <FriendsCard currentUsername={user.username} currentDisplayId={user.displayId} />
 
       {/* Rank progression */}
       <Card>
@@ -133,10 +157,14 @@ export function ProfileView({ user, gamification }: Props) {
                   )}
                 >
                   <span className="text-2xl">{r.icon}</span>
-                  <span className="text-[10px] font-medium text-center leading-tight">{r.label}</span>
+                  <span className="text-[10px] font-medium text-center leading-tight">
+                    {r.label}
+                  </span>
                   <span className="text-[9px] text-muted-foreground">Lv {r.minLevel}</span>
                   {isCurrentRank && (
-                    <Badge variant="secondary" className="text-[8px] px-1 py-0">Atual</Badge>
+                    <Badge variant="secondary" className="text-[8px] px-1 py-0">
+                      Atual
+                    </Badge>
                   )}
                 </div>
               )
@@ -164,11 +192,18 @@ export function ProfileView({ user, gamification }: Props) {
                     unlocked ? "bg-card" : "opacity-40 grayscale"
                   )}
                 >
-                  <div className={cn(
-                    "size-8 rounded-full flex items-center justify-center shrink-0",
-                    unlocked ? "bg-yellow-500/20" : "bg-muted"
-                  )}>
-                    <Medal className={cn("size-4", unlocked ? "text-yellow-600" : "text-muted-foreground")} />
+                  <div
+                    className={cn(
+                      "size-8 rounded-full flex items-center justify-center shrink-0",
+                      unlocked ? "bg-yellow-500/20" : "bg-muted"
+                    )}
+                  >
+                    <Medal
+                      className={cn(
+                        "size-4",
+                        unlocked ? "text-yellow-600" : "text-muted-foreground"
+                      )}
+                    />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-medium">{info.label}</p>
@@ -201,7 +236,9 @@ export function ProfileView({ user, gamification }: Props) {
             ].map((rule) => (
               <li key={rule.label} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{rule.label}</span>
-                <Badge variant="outline" className="font-mono text-xs">{rule.xp}</Badge>
+                <Badge variant="outline" className="font-mono text-xs">
+                  {rule.xp}
+                </Badge>
               </li>
             ))}
           </ul>

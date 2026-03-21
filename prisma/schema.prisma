@@ -21,9 +21,16 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // bcrypt hash — null for OAuth users
+  password      String?
   provider      String    @default("email")
   githubUsername String?
+
+  // Social identity
+  username      String?   @unique   // chosen at register, e.g. "eliel"
+  displayId     String    @unique @default(cuid()) // short hash shown as #XXXX
+
+  // Presence
+  lastSeenAt    DateTime?
 
   accounts      Account[]
   sessions      Session[]
@@ -33,6 +40,10 @@ model User {
   goals         Goal[]
   tasks         Task[]
   gamification  Gamification?
+
+  // Friendships (both directions)
+  sentRequests     Friendship[] @relation("FriendshipSender")
+  receivedRequests Friendship[] @relation("FriendshipReceiver")
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -82,8 +93,8 @@ model Subject {
   id        String  @id @default(cuid())
   userId    String
   name      String
-  workload  Int     // hours per week
-  progress  Int     @default(0) // 0–100
+  workload  Int
+  progress  Int     @default(0)
   color     String  @default("#18181b")
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -100,8 +111,8 @@ model AgendaItem {
   subjectId String?
 
   title     String
-  date      String   // ISO 8601 date string (YYYY-MM-DD)
-  time      String   // HH:MM
+  date      String
+  time      String
   location  String   @default("Nao definido")
   done      Boolean  @default(false)
 
@@ -133,7 +144,7 @@ model Task {
 
   title   String
   details String  @default("")
-  dueDate String  // ISO 8601 date string
+  dueDate String
   done    Boolean @default(false)
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -167,9 +178,34 @@ model Achievement {
   id               String @id @default(cuid())
   gamificationId   String
   key              String
-  unlockedAt       String // ISO date string
+  unlockedAt       String
 
   gamification Gamification @relation(fields: [gamificationId], references: [id], onDelete: Cascade)
 
   @@unique([gamificationId, key])
+}
+
+// ---------------------------------------------------------------------------
+// Social / Friends
+// ---------------------------------------------------------------------------
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+model Friendship {
+  id         String           @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     FriendshipStatus @default(PENDING)
+
+  sender   User @relation("FriendshipSender",   fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
 }

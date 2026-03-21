@@ -20,7 +20,13 @@ import { Separator } from "@/components/ui/separator"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" })
+  const [form, setForm] = useState({
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [githubLoading, setGithubLoading] = useState(false)
@@ -28,6 +34,12 @@ export default function RegisterPage() {
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [field]: e.target.value }))
+  }
+
+  function handleUsernameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    // auto-lowercase and strip invalid chars
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, "")
+    setForm((prev) => ({ ...prev, username: value }))
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -109,13 +121,39 @@ export default function RegisterPage() {
               <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
-                placeholder="Seu nome"
+                placeholder="Seu nome completo"
                 value={form.name}
                 onChange={update("name")}
                 required
                 minLength={2}
                 autoComplete="name"
               />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="username">
+                Username
+                <span className="text-[10px] text-muted-foreground ml-1">
+                  (usado para adicionar amigos)
+                </span>
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                <Input
+                  id="username"
+                  placeholder="seuusername"
+                  value={form.username}
+                  onChange={handleUsernameChange}
+                  required
+                  minLength={3}
+                  maxLength={30}
+                  className="pl-7"
+                  autoComplete="username"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Apenas letras minúsculas, números, . e _
+              </p>
             </div>
 
             <div className="space-y-1">

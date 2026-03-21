@@ -12,6 +12,11 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(80),
+    username: z
+      .string()
+      .min(3, "Username deve ter pelo menos 3 caracteres")
+      .max(30, "Username deve ter no máximo 30 caracteres")
+      .regex(/^[a-z0-9._]+$/, "Username só pode conter letras minúsculas, números, . e _"),
     email: z.string().email("E-mail inválido"),
     password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
     confirmPassword: z.string(),
