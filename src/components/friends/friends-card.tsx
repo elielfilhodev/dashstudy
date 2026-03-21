@@ -14,6 +14,7 @@ import {
   Clock,
   Mail,
   Trophy,
+  Eye,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { rankFromLevel, levelFromXp } from "@/lib/gamification"
+import { FriendProfileDialog } from "@/components/friends/friend-profile-dialog"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((d) => d.data)
 
@@ -82,7 +84,15 @@ function FriendAvatar({ user }: { user: Pick<FriendUser, "name" | "image" | "onl
   )
 }
 
-function FriendCard({ friend, onRemove }: { friend: FriendUser; onRemove: (id: string) => void }) {
+function FriendCard({
+  friend,
+  onRemove,
+  onInspect,
+}: {
+  friend: FriendUser
+  onRemove: (id: string) => void
+  onInspect: (userId: string) => void
+}) {
   const levelInfo = levelFromXp(friend.xp)
   const rank = rankFromLevel(levelInfo.level)
   const [removing, setRemoving] = useState(false)
@@ -118,7 +128,18 @@ function FriendCard({ friend, onRemove }: { friend: FriendUser; onRemove: (id: s
       <Button
         variant="ghost"
         size="icon"
+        className="size-7 text-muted-foreground hover:text-foreground"
+        type="button"
+        onClick={() => onInspect(friend.id)}
+        title="Ver perfil"
+      >
+        <Eye className="size-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
         className="size-7 text-muted-foreground hover:text-destructive"
+        type="button"
         onClick={handleRemove}
         disabled={removing}
         title="Remover amigo"
@@ -215,6 +236,9 @@ export function FriendsCard({ currentUsername, currentDisplayId }: Props) {
   const { data, isLoading, mutate } = useSWR<FriendsData>("/api/friends", fetcher, {
     refreshInterval: 30_000,
   })
+
+  const [profileUserId, setProfileUserId] = useState<string | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const [searchInput, setSearchInput] = useState("")
   const [searchLoading, setSearchLoading] = useState(false)
@@ -358,7 +382,15 @@ export function FriendsCard({ currentUsername, currentDisplayId }: Props) {
             ) : (
               <div className="divide-y divide-border/50">
                 {friends.map((f) => (
-                  <FriendCard key={f.friendshipId} friend={f} onRemove={handleRemoveFriend} />
+                  <FriendCard
+                    key={f.friendshipId}
+                    friend={f}
+                    onRemove={handleRemoveFriend}
+                    onInspect={(userId) => {
+                      setProfileUserId(userId)
+                      setProfileOpen(true)
+                    }}
+                  />
                 ))}
               </div>
             )}
@@ -414,6 +446,15 @@ export function FriendsCard({ currentUsername, currentDisplayId }: Props) {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      <FriendProfileDialog
+        friendUserId={profileUserId}
+        open={profileOpen}
+        onOpenChange={(open) => {
+          setProfileOpen(open)
+          if (!open) setProfileUserId(null)
+        }}
+      />
     </Card>
   )
 }
