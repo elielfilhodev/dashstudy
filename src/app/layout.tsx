@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { SessionProvider } from "@/components/layout/session-provider"
+import { SWRProvider } from "@/components/layout/swr-provider"
 
 const inter = Inter({
   variable: "--font-sans",
@@ -32,9 +33,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SessionProvider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
+          <SWRProvider>
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </SWRProvider>
         </SessionProvider>
       </body>
     </html>

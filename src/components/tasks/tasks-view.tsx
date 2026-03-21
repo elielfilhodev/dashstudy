@@ -94,19 +94,20 @@ export function TasksView({
   async function handleToggle(task: Task) {
     const willComplete = !task.done
 
-    await fetch(`/api/tasks/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done: willComplete }),
-    })
-
     if (willComplete) {
+      // XP must be awarded BEFORE marking done — API checks task.done to prevent double rewards
       await fetch("/api/gamification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId: task.id }),
       })
     }
+
+    await fetch(`/api/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: willComplete }),
+    })
 
     revalidate()
   }

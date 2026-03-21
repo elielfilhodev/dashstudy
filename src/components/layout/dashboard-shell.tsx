@@ -2,21 +2,25 @@
 
 import { useState } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
+import { MobileNav } from "@/components/layout/mobile-nav"
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar — hidden on mobile, fixed on desktop */}
+      {/* Sidebar — desktop only */}
       <div className="hidden md:flex flex-col shrink-0">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       </div>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
+      {/* Main content — extra bottom padding on mobile for the nav bar */}
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {children}
       </main>
+
+      {/* Bottom nav — mobile only */}
+      <MobileNav />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { levelFromXp, rankFromLevel, ACHIEVEMENTS } from "@/lib/gamification"
+import { levelFromXp, rankFromLevel, ACHIEVEMENTS, RANK_THRESHOLDS } from "@/lib/gamification"
 import type { Achievement, Gamification } from "@/types"
 
 interface Props {
@@ -34,6 +34,7 @@ export function ProfileView({ user, gamification }: Props) {
   const levelInfo = levelFromXp(xp)
   const rank = rankFromLevel(levelInfo.level)
   const streakActive = streakDays > 0
+  const isEliteRank = !!rank.avatarBorder
 
   const avatarFallback = user.name
     .split(" ")
@@ -50,13 +51,20 @@ export function ProfileView({ user, gamification }: Props) {
       </div>
 
       {/* User card */}
-      <Card>
+      <Card className={cn(isEliteRank && "border-2", rank.key === "mestre" && "border-red-500/50", rank.key === "grao-mestre" && "border-purple-500/50", rank.key === "genio" && "border-yellow-500/50")}>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Avatar className="size-20">
-              {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-              <AvatarFallback className="text-xl">{avatarFallback}</AvatarFallback>
-            </Avatar>
+            {/* Avatar with elite border */}
+            <div className="relative shrink-0">
+              <Avatar className={cn("size-20", rank.avatarBorder)}>
+                {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                <AvatarFallback className="text-xl">{avatarFallback}</AvatarFallback>
+              </Avatar>
+              {isEliteRank && (
+                <span className="absolute -bottom-1 -right-1 text-lg">{rank.icon}</span>
+              )}
+            </div>
+
             <div className="text-center sm:text-left flex-1">
               <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                 <h2 className="text-xl font-bold">{user.name}</h2>
@@ -68,8 +76,10 @@ export function ProfileView({ user, gamification }: Props) {
                 )}
               </div>
               <p className="text-sm text-muted-foreground">{user.email}</p>
-              <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
-                <Badge className={cn("text-xs", rank.className)}>{rank.label}</Badge>
+              <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start flex-wrap">
+                <Badge className={cn("text-xs", rank.className)}>
+                  {rank.icon} {rank.label}
+                </Badge>
                 <span className="text-sm text-muted-foreground">Nível {levelInfo.level}</span>
               </div>
             </div>
@@ -100,47 +110,78 @@ export function ProfileView({ user, gamification }: Props) {
         </CardContent>
       </Card>
 
+      {/* Rank progression */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Trophy className="size-4" /> Progressão de Elos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {RANK_THRESHOLDS.map((r) => {
+              const isCurrentRank = rank.key === r.key
+              const isUnlocked = levelInfo.level >= r.minLevel
+              return (
+                <div
+                  key={r.key}
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-lg p-2 border transition-all",
+                    isCurrentRank && "border-primary bg-primary/5 scale-105",
+                    !isUnlocked && "opacity-40 grayscale",
+                    isUnlocked && !isCurrentRank && "border-border"
+                  )}
+                >
+                  <span className="text-2xl">{r.icon}</span>
+                  <span className="text-[10px] font-medium text-center leading-tight">{r.label}</span>
+                  <span className="text-[9px] text-muted-foreground">Lv {r.minLevel}</span>
+                  {isCurrentRank && (
+                    <Badge variant="secondary" className="text-[8px] px-1 py-0">Atual</Badge>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Achievements */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Trophy className="size-4" /> Conquistas
+            <Medal className="size-4" /> Conquistas
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {Object.keys(ACHIEVEMENTS).length === 0 ? null : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {Object.entries(ACHIEVEMENTS).map(([key, info]) => {
-                const unlocked = achievements.find((a) => a.key === key)
-                return (
-                  <div
-                    key={key}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg border border-border p-3 transition-all",
-                      unlocked ? "bg-card" : "opacity-40 grayscale"
-                    )}
-                  >
-                    <div className={cn(
-                      "size-8 rounded-full flex items-center justify-center shrink-0",
-                      unlocked ? "bg-yellow-500/20" : "bg-muted"
-                    )}>
-                      <Medal className={cn("size-4", unlocked ? "text-yellow-600" : "text-muted-foreground")} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium">{info.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{info.description}</p>
-                      {unlocked && (
-                        <p className="text-[10px] text-muted-foreground">
-                          {unlocked.unlockedAt}
-                        </p>
-                      )}
-                    </div>
-                    {unlocked && <Star className="size-3 text-yellow-500 shrink-0 ml-auto" />}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Object.entries(ACHIEVEMENTS).map(([key, info]) => {
+              const unlocked = achievements.find((a) => a.key === key)
+              return (
+                <div
+                  key={key}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border border-border p-3 transition-all",
+                    unlocked ? "bg-card" : "opacity-40 grayscale"
+                  )}
+                >
+                  <div className={cn(
+                    "size-8 rounded-full flex items-center justify-center shrink-0",
+                    unlocked ? "bg-yellow-500/20" : "bg-muted"
+                  )}>
+                    <Medal className={cn("size-4", unlocked ? "text-yellow-600" : "text-muted-foreground")} />
                   </div>
-                )
-              })}
-            </div>
-          )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium">{info.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{info.description}</p>
+                    {unlocked && (
+                      <p className="text-[10px] text-muted-foreground">{unlocked.unlockedAt}</p>
+                    )}
+                  </div>
+                  {unlocked && <Star className="size-3 text-yellow-500 shrink-0 ml-auto" />}
+                </div>
+              )
+            })}
+          </div>
         </CardContent>
       </Card>
 

@@ -72,12 +72,23 @@ export type Gamification = {
   updatedAt: Date | string
 }
 
-export type RankKey = "bronze" | "prata" | "ouro" | "platina" | "diamante"
+export type RankKey =
+  | "bronze"
+  | "prata"
+  | "ouro"
+  | "platina"
+  | "esmeralda"
+  | "diamante"
+  | "mestre"
+  | "grao-mestre"
+  | "genio"
 
 export type RankInfo = {
   key: RankKey
   label: string
   className: string
+  avatarBorder?: string // only for top 3 ranks
+  icon?: string
 }
 
 // ---------------------------------------------------------------------------
