@@ -1,6 +1,6 @@
 "use client"
 
-import { Flame, Medal, Star, Trophy, Zap } from "lucide-react"
+import { Activity, Flame, Medal, Star, Trophy, Zap } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { levelFromXp, rankFromLevel, ACHIEVEMENTS, RANK_THRESHOLDS } from "@/lib/gamification"
 import { FriendsCard } from "@/components/friends/friends-card"
+import { ActivityHeatmap } from "@/components/profile/activity-heatmap"
 import type { Achievement, Gamification } from "@/types"
 
 interface Props {
@@ -128,6 +129,18 @@ export function ProfileView({ user, gamification }: Props) {
             <StatItem label="Tarefas" value={totalCompletions} />
             <StatItem label="Melhor ofensiva" value={`${bestStreak}d`} />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Activity heatmap */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Activity className="size-4" /> Atividade
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ActivityHeatmap rankKey={rank.key} />
         </CardContent>
       </Card>
 
