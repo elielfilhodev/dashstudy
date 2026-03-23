@@ -99,3 +99,29 @@ export const updateTaskSchema = createTaskSchema.partial().extend({
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>
+
+// ---------------------------------------------------------------------------
+// Livraria
+// ---------------------------------------------------------------------------
+
+export const createBookSchema = z.object({
+  title: z.string().min(1).max(300),
+  author: z.string().max(200).optional().nullable(),
+  isbn: z.string().max(32).optional().nullable(),
+  rating: z.number().int().min(1).max(5).optional().nullable(),
+  review: z.string().max(8000).optional().nullable(),
+  coverUrl: z.string().max(2048).optional().nullable(),
+})
+
+export const updateBookSchema = createBookSchema.partial()
+
+export const createBookNoteSchema = z.object({
+  body: z.string().min(1).max(8000),
+})
+
+export const createBookCommentSchema = z.object({
+  body: z.string().min(1).max(2000),
+})
+
+export type CreateBookInput = z.infer<typeof createBookSchema>
+export type UpdateBookInput = z.infer<typeof updateBookSchema>

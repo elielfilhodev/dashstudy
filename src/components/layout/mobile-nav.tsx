@@ -7,6 +7,7 @@ import {
   CalendarClock,
   CheckCircle2,
   LayoutDashboard,
+  Library,
   Target,
   UserRound,
 } from "lucide-react"
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/agenda", label: "Agenda", icon: CalendarClock },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/atividades", label: "Tarefas", icon: CheckCircle2 },
+  { href: "/livraria", label: "Livros", icon: Library },
   { href: "/perfil", label: "Perfil", icon: UserRound },
 ]
 

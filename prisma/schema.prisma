@@ -45,6 +45,10 @@ model User {
   sentRequests     Friendship[] @relation("FriendshipSender")
   receivedRequests Friendship[] @relation("FriendshipReceiver")
 
+  books         Book[]
+  bookNotes     BookNote[]
+  bookComments  BookComment[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -208,4 +212,69 @@ model Friendship {
   updatedAt DateTime @updatedAt
 
   @@unique([senderId, receiverId])
+}
+
+// ---------------------------------------------------------------------------
+// Livraria (livros, anotações, comentários de amigos)
+// ---------------------------------------------------------------------------
+
+model Book {
+  id     String @id @default(cuid())
+  userId String
+
+  title  String
+  author String?
+  isbn   String?
+
+  /// Avaliação do dono (1–5 estrelas)
+  rating Int?
+
+  /// Texto de avaliação / resenha visível para amigos
+  review String? @db.Text
+
+  /// Capa por URL externa (opcional)
+  coverUrl String?
+
+  /// Capa enviada pelo app (binário; não incluir em listagens)
+  coverMime String?
+  coverBlob Bytes?
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes    BookNote[]
+  comments BookComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model BookNote {
+  id     String @id @default(cuid())
+  bookId String
+  userId String
+
+  body String @db.Text
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([bookId])
+}
+
+model BookComment {
+  id     String @id @default(cuid())
+  bookId String
+  userId String
+
+  body String @db.Text
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([bookId])
 }

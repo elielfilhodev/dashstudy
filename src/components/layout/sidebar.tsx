@@ -14,6 +14,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sun,
+  Library,
   Target,
   UserRound,
 } from "lucide-react"
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/agenda", label: "Agenda", icon: CalendarClock },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/atividades", label: "Atividades", icon: CheckCircle2 },
+  { href: "/livraria", label: "Livraria", icon: Library },
   { href: "/perfil", label: "Perfil", icon: UserRound },
 ]
 

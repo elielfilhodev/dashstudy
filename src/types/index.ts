@@ -95,4 +95,39 @@ export type RankInfo = {
 // View routing
 // ---------------------------------------------------------------------------
 
-export type View = "dashboard" | "materias" | "agenda" | "metas" | "atividades" | "perfil"
+export type View =
+  | "dashboard"
+  | "materias"
+  | "agenda"
+  | "metas"
+  | "atividades"
+  | "livraria"
+  | "perfil"
+
+export type BookListItem = {
+  id: string
+  title: string
+  author: string | null
+  isbn: string | null
+  rating: number | null
+  coverUrl: string | null
+  hasCover: boolean
+  coverImageHref: string | null
+  notesCount: number
+  commentsCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type BookComment = {
+  id: string
+  body: string
+  createdAt: string
+  user: {
+    id: string
+    name: string
+    username: string | null
+    displayId: string
+    image: string | null
+  }
+}
