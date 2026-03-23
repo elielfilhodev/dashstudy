@@ -13,6 +13,7 @@ import {
   MoonStar,
   PanelLeftClose,
   PanelLeftOpen,
+  Settings,
   Sun,
   Library,
   Target,
@@ -36,6 +37,7 @@ const navItems = [
   { href: "/atividades", label: "Atividades", icon: CheckCircle2 },
   { href: "/livraria", label: "Livraria", icon: Library },
   { href: "/perfil", label: "Perfil", icon: UserRound },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ]
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())

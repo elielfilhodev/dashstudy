@@ -125,3 +125,51 @@ export const createBookCommentSchema = z.object({
 
 export type CreateBookInput = z.infer<typeof createBookSchema>
 export type UpdateBookInput = z.infer<typeof updateBookSchema>
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+export const updateUsernameSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Username deve ter pelo menos 3 caracteres")
+    .max(30, "Username deve ter no máximo 30 caracteres")
+    .regex(/^[a-z0-9._]+$/, "Username só pode conter letras minúsculas, números, . e _"),
+})
+
+export const updateAvatarSchema = z.object({
+  image: z.string().url("URL de imagem inválida").max(2048),
+})
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Senha atual é obrigatória"),
+    newPassword: z.string().min(6, "Nova senha deve ter pelo menos 6 caracteres"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "As senhas não conferem",
+    path: ["confirmPassword"],
+  })
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+})
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1),
+    newPassword: z.string().min(6, "Nova senha deve ter pelo menos 6 caracteres"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "As senhas não conferem",
+    path: ["confirmPassword"],
+  })
+
+export type UpdateUsernameInput = z.infer<typeof updateUsernameSchema>
+export type UpdateAvatarInput = z.infer<typeof updateAvatarSchema>
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

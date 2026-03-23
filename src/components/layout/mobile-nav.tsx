@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   LayoutDashboard,
   Library,
+  Settings,
   Target,
   UserRound,
 } from "lucide-react"
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/atividades", label: "Tarefas", icon: CheckCircle2 },
   { href: "/livraria", label: "Livros", icon: Library },
   { href: "/perfil", label: "Perfil", icon: UserRound },
+  { href: "/configuracoes", label: "Config.", icon: Settings },
 ]
 
 export function MobileNav() {

@@ -5,7 +5,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
   const isLoggedIn = !!req.auth
 
-  const authRoutes = ["/login", "/register"]
+  const authRoutes = ["/login", "/register", "/reset-password"]
   const isAuthRoute = authRoutes.includes(pathname)
 
   if (isAuthRoute) {

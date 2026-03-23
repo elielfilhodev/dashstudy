@@ -49,9 +49,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
+      }
+      if (trigger === "update" && token.id) {
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, image: true },
+        })
+        if (dbUser) {
+          token.name = dbUser.name
+          token.picture = dbUser.image
+        }
       }
       return token
     },
