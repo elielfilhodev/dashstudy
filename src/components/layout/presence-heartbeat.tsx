@@ -2,23 +2,26 @@
 
 import { useEffect } from "react"
 
-const INTERVAL_MS = 2 * 60 * 1000 // 2 minutes
+const INTERVAL_MS = 2 * 60 * 1000 // 2 minutos
 
 /**
- * Sends a POST /api/presence heartbeat to keep the user marked as online.
- * Should be mounted once inside the authenticated layout.
+ * Envia POST /api/presence periodicamente para manter o usuário marcado como online.
+ * Monta uma única vez no layout autenticado.
+ * Pula o ping quando o documento está oculto (aba em background) para evitar
+ * requests desnecessários.
  */
 export function PresenceHeartbeat() {
   useEffect(() => {
     async function ping() {
+      if (document.hidden) return
       try {
         await fetch("/api/presence", { method: "POST" })
       } catch {
-        // silent — presence is best-effort
+        // silencioso — presença é best-effort
       }
     }
 
-    ping() // immediate on mount
+    ping()
     const timer = setInterval(ping, INTERVAL_MS)
     return () => clearInterval(timer)
   }, [])

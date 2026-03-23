@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { Send } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -10,10 +10,19 @@ import { toast } from "sonner"
 import useSWR from "swr"
 import type { ChatGroup, ChatMessage, ChatUser, Conversation } from "@/types"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
+const fetcher = (url: string) =>
+  fetch(url).then((r) => {
+    if (!r.ok) throw new Error("Fetch error")
+    return r.json().then((j) => j.data)
+  })
 
 function initials(name: string) {
-  return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
 }
 
 function formatTime(iso: string) {
@@ -45,8 +54,10 @@ export function ChatWindow({ conversation, meId, friends, onGroupUpdated, onGrou
     ? `/api/chat/direct/${conversation.friend.id}`
     : `/api/chat/groups/${conversation.group.id}/messages`
 
+  // Pausa o polling quando a aba está em background para evitar requests desnecessários
   const { data: messages = [], mutate } = useSWR<ChatMessage[]>(apiUrl, fetcher, {
-    refreshInterval: 2500,
+    refreshInterval: () => (typeof document !== "undefined" && document.hidden ? 0 : 5000),
+    dedupingInterval: 3000,
   })
 
   const [text, setText] = useState("")
@@ -76,6 +87,7 @@ export function ChatWindow({ conversation, meId, friends, onGroupUpdated, onGrou
           return
         }
         setText("")
+        // Revalida imediatamente após envio para exibir a mensagem sem esperar o intervalo
         mutate()
       } finally {
         setSending(false)
@@ -85,28 +97,36 @@ export function ChatWindow({ conversation, meId, friends, onGroupUpdated, onGrou
     [text, apiUrl, mutate]
   )
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault()
+        handleSend()
+      }
+    },
+    [handleSend]
+  )
 
   const title = isDirect ? conversation.friend.name : conversation.group.name
   const subtitle = isDirect
-    ? conversation.friend.online ? "online" : "offline"
+    ? conversation.friend.online
+      ? "online"
+      : "offline"
     : `${conversation.group.members.length} membros`
 
-  // Group messages by date
-  const grouped: { date: string; msgs: ChatMessage[] }[] = []
-  for (const m of messages) {
-    const d = formatDate(m.createdAt)
-    if (!grouped.length || grouped[grouped.length - 1].date !== d) {
-      grouped.push({ date: d, msgs: [m] })
-    } else {
-      grouped[grouped.length - 1].msgs.push(m)
+  // Agrupa mensagens por data — memoizado para evitar recalcular a cada render
+  const grouped = useMemo(() => {
+    const result: { date: string; msgs: ChatMessage[] }[] = []
+    for (const m of messages) {
+      const d = formatDate(m.createdAt)
+      if (!result.length || result[result.length - 1].date !== d) {
+        result.push({ date: d, msgs: [m] })
+      } else {
+        result[result.length - 1].msgs.push(m)
+      }
     }
-  }
+    return result
+  }, [messages])
 
   return (
     <div className="flex flex-col h-full">

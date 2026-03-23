@@ -11,15 +11,33 @@ export default async function DashboardPage() {
   const userId = session.user.id
 
   const [subjects, tasks, agendaItems, rawGamification] = await Promise.all([
-    db.subject.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+    // Seleciona apenas os campos usados pelo DashboardOverview
+    db.subject.findMany({
+      where: { userId },
+      select: { id: true, name: true, progress: true, workload: true },
+      orderBy: { createdAt: "asc" },
+    }),
     db.task.findMany({
       where: { userId },
-      include: { subject: { select: { id: true, name: true } } },
+      select: {
+        id: true,
+        title: true,
+        done: true,
+        dueDate: true,
+        subject: { select: { id: true, name: true } },
+      },
       orderBy: [{ dueDate: "asc" }],
     }),
     db.agendaItem.findMany({
       where: { userId },
-      include: { subject: { select: { id: true, name: true } } },
+      select: {
+        id: true,
+        title: true,
+        date: true,
+        time: true,
+        done: true,
+        subject: { select: { id: true, name: true } },
+      },
       orderBy: [{ date: "asc" }, { time: "asc" }],
     }),
     db.gamification.findUnique({

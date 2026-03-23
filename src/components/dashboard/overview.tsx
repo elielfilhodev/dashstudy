@@ -117,38 +117,30 @@ function PieChart({
   const r = 40
 
   type SlicePath = { d: string; color: string; label: string; value: number; pct: number }
-  type Acc = { cumulative: number; paths: SlicePath[] }
 
-  const { paths } = slices
-    .filter((s) => s.value > 0)
-    .reduce<Acc>(
-      (acc, slice) => {
-        const startAngle = acc.cumulative
-        const angle = (slice.value / total) * 360
-        const endAngle = startAngle + angle
+  // Construção O(n) com push em vez de spread a cada iteração (spread seria O(n²))
+  const paths: SlicePath[] = []
+  let cumulative = -90
+  for (const slice of slices.filter((s) => s.value > 0)) {
+    const startAngle = cumulative
+    const angle = (slice.value / total) * 360
+    const endAngle = startAngle + angle
 
-        const x1 = cx + r * Math.cos(toRad(startAngle))
-        const y1 = cy + r * Math.sin(toRad(startAngle))
-        const x2 = cx + r * Math.cos(toRad(endAngle))
-        const y2 = cy + r * Math.sin(toRad(endAngle))
-        const largeArc = angle > 180 ? 1 : 0
+    const x1 = cx + r * Math.cos(toRad(startAngle))
+    const y1 = cy + r * Math.sin(toRad(startAngle))
+    const x2 = cx + r * Math.cos(toRad(endAngle))
+    const y2 = cy + r * Math.sin(toRad(endAngle))
+    const largeArc = angle > 180 ? 1 : 0
 
-        return {
-          cumulative: endAngle,
-          paths: [
-            ...acc.paths,
-            {
-              d: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`,
-              color: slice.color,
-              label: slice.label,
-              value: slice.value,
-              pct: Math.round((slice.value / total) * 100),
-            },
-          ],
-        }
-      },
-      { cumulative: -90, paths: [] }
-    )
+    paths.push({
+      d: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`,
+      color: slice.color,
+      label: slice.label,
+      value: slice.value,
+      pct: Math.round((slice.value / total) * 100),
+    })
+    cumulative = endAngle
+  }
 
   return (
     <div className="flex items-center gap-4">

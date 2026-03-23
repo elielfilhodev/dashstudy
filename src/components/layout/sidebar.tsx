@@ -42,8 +42,6 @@ const navItems = [
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ]
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
@@ -53,13 +51,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const { theme, toggle: toggleTheme } = useTheme()
   const { data: session } = useSession()
-  const { data: gamData } = useSWR<{ data: Gamification }>(
+  // Usa o fetcher global do SWRProvider (já faz unwrap de .data e trata erros)
+  const { data: gamification } = useSWR<Gamification>(
     session ? "/api/gamification" : null,
-    fetcher,
     { refreshInterval: 0 }
   )
-
-  const gamification = gamData?.data
   const xp = gamification?.xp ?? 0
   const streakDays = gamification?.streakDays ?? 0
   const levelInfo = levelFromXp(xp)
