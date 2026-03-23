@@ -11,10 +11,17 @@ export default async function DashboardPage() {
   const userId = session.user.id
 
   const [subjects, tasks, agendaItems, rawGamification] = await Promise.all([
-    // Seleciona apenas os campos usados pelo DashboardOverview
     db.subject.findMany({
       where: { userId },
-      select: { id: true, name: true, progress: true, workload: true },
+      select: {
+        id: true,
+        name: true,
+        progress: true,
+        workload: true,
+        color: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: { createdAt: "asc" },
     }),
     db.task.findMany({
@@ -22,8 +29,13 @@ export default async function DashboardPage() {
       select: {
         id: true,
         title: true,
+        details: true,
         done: true,
         dueDate: true,
+        scheduledTime: true,
+        subjectId: true,
+        createdAt: true,
+        updatedAt: true,
         subject: { select: { id: true, name: true } },
       },
       orderBy: [{ dueDate: "asc" }],
@@ -36,6 +48,10 @@ export default async function DashboardPage() {
         date: true,
         time: true,
         done: true,
+        location: true,
+        subjectId: true,
+        createdAt: true,
+        updatedAt: true,
         subject: { select: { id: true, name: true } },
       },
       orderBy: [{ date: "asc" }, { time: "asc" }],
