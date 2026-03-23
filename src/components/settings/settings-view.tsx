@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { useSession } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { toast } from "sonner"
-import { Eye, EyeOff, Camera, AtSign, Lock, KeyRound, Loader2, CheckCircle2 } from "lucide-react"
+import { Eye, EyeOff, Camera, AtSign, Lock, KeyRound, Loader2, CheckCircle2, LogOut } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -47,6 +47,10 @@ export function SettingsView({ user }: Props) {
   // --- Forgot password ---
   const [forgotLoading, setForgotLoading] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
+
+  // --- Logout ---
+  const [logoutLoading, setLogoutLoading] = useState(false)
+  const [logoutConfirm, setLogoutConfirm] = useState(false)
 
   const avatarFallback = user.name
     .split(" ")
@@ -134,6 +138,16 @@ export function SettingsView({ user }: Props) {
       toast.error("Erro de conexão")
     } finally {
       setPasswordLoading(false)
+    }
+  }
+
+  async function handleLogout() {
+    setLogoutLoading(true)
+    try {
+      await signOut({ callbackUrl: "/login" })
+    } catch {
+      toast.error("Erro ao sair. Tente novamente.")
+      setLogoutLoading(false)
     }
   }
 
@@ -431,6 +445,57 @@ export function SettingsView({ user }: Props) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Sair da conta */}
+      <Separator />
+      <Card className="border-destructive/40">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2 text-destructive">
+            <LogOut className="size-4" /> Sair da conta
+          </CardTitle>
+          <CardDescription>
+            Encerra sua sessão em todos os dispositivos neste navegador.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {logoutConfirm ? (
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-muted-foreground flex-1">
+                Tem certeza que deseja sair?
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLogoutConfirm(false)}
+                disabled={logoutLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleLogout}
+                disabled={logoutLoading}
+              >
+                {logoutLoading ? (
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                ) : null}
+                Confirmar saída
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setLogoutConfirm(true)}
+            >
+              <LogOut className="size-4 mr-2" />
+              Sair da conta
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
