@@ -18,7 +18,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main content — extra bottom padding on mobile for the nav bar */}
-      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0 [&:has(.full-height-page)]:overflow-hidden [&:has(.full-height-page)]:pb-0">
         {children}
       </main>
 

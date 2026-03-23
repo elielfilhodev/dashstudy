@@ -90,6 +90,7 @@ export const createTaskSchema = z.object({
   title: z.string().min(1).max(200),
   details: z.string().max(2000).optional().default(""),
   dueDate: z.string().regex(dateRegex, "Data inválida (YYYY-MM-DD)"),
+  scheduledTime: z.string().regex(timeRegex, "Horário inválido (HH:MM)").optional().nullable(),
   subjectId: z.string().cuid().optional().nullable(),
 })
 
@@ -99,6 +100,29 @@ export const updateTaskSchema = createTaskSchema.partial().extend({
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+export const createGroupSchema = z.object({
+  name: z.string().min(1, "Nome obrigatório").max(80),
+  description: z.string().max(300).optional().nullable(),
+})
+
+export const updateGroupSchema = z.object({
+  name: z.string().min(1).max(80).optional(),
+  description: z.string().max(300).optional().nullable(),
+  coAdminId: z.string().cuid().optional().nullable(),
+})
+
+export const sendMessageSchema = z.object({
+  content: z.string().min(1, "Mensagem não pode ser vazia").max(4000),
+})
+
+export type CreateGroupInput = z.infer<typeof createGroupSchema>
+export type UpdateGroupInput = z.infer<typeof updateGroupSchema>
+export type SendMessageInput = z.infer<typeof sendMessageSchema>
 
 // ---------------------------------------------------------------------------
 // Livraria

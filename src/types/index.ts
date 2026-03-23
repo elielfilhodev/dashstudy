@@ -39,6 +39,7 @@ export type Task = {
   title: string
   details: string
   dueDate: string
+  scheduledTime: string | null
   done: boolean
   subjectId: string | null
   subject: { id: string; name: string } | null
@@ -131,3 +132,51 @@ export type BookComment = {
     image: string | null
   }
 }
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+export type ChatUser = {
+  id: string
+  name: string
+  username: string | null
+  displayId: string
+  image: string | null
+  online?: boolean
+}
+
+export type ChatGroup = {
+  id: string
+  name: string
+  description: string | null
+  adminId: string
+  coAdminId: string | null
+  admin: ChatUser
+  coAdmin: ChatUser | null
+  members: ChatGroupMember[]
+  createdAt: string
+  updatedAt: string
+}
+
+export type ChatGroupMember = {
+  id: string
+  groupId: string
+  userId: string
+  user: ChatUser
+  joinedAt: string
+}
+
+export type ChatMessage = {
+  id: string
+  content: string
+  senderId: string
+  sender: ChatUser
+  recipientId: string | null
+  groupId: string | null
+  createdAt: string
+}
+
+export type Conversation =
+  | { type: "direct"; friend: ChatUser; lastMessage: ChatMessage | null; unread: number }
+  | { type: "group"; group: ChatGroup; lastMessage: ChatMessage | null; unread: number }

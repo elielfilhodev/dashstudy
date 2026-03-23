@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { CheckCircle2, Circle, Plus, Trash2 } from "lucide-react"
+import { CheckCircle2, Circle, Clock, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,7 +44,7 @@ const STATUS_LABEL: Record<string, string> = {
   overdue: "Atrasada",
 }
 
-const emptyForm = { title: "", details: "", dueDate: todayStr, subjectId: "" as string | null }
+const emptyForm = { title: "", details: "", dueDate: todayStr, scheduledTime: "", subjectId: "" as string | null }
 
 export function TasksView({
   initialTasks,
@@ -83,6 +83,7 @@ export function TasksView({
           title: form.title.trim(),
           details: form.details,
           dueDate: form.dueDate,
+          scheduledTime: form.scheduledTime || null,
           subjectId: form.subjectId || null,
         }),
       })
@@ -182,6 +183,15 @@ export function TasksView({
                   value={form.dueDate}
                   onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))}
                   required
+                />
+              </div>
+              <div className="w-full sm:w-32 space-y-1">
+                <Label htmlFor="task-time" className="text-xs">Horário (opcional)</Label>
+                <Input
+                  id="task-time"
+                  type="time"
+                  value={form.scheduledTime}
+                  onChange={(e) => setForm((p) => ({ ...p, scheduledTime: e.target.value }))}
                 />
               </div>
               <div className="w-full sm:w-36 space-y-1">
@@ -308,6 +318,11 @@ export function TasksView({
                       <span className="text-[10px] bg-muted rounded px-1.5 py-0.5">{task.subject.name}</span>
                     )}
                     <span className="text-[10px] text-muted-foreground">Prazo: {task.dueDate}</span>
+                    {task.scheduledTime && (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                        <Clock className="size-2.5" />{task.scheduledTime}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

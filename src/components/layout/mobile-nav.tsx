@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   LayoutDashboard,
   Library,
+  MessageCircle,
   Settings,
   Target,
   UserRound,
@@ -16,11 +17,9 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "Início", icon: LayoutDashboard },
-  { href: "/materias", label: "Matérias", icon: BookOpen },
   { href: "/agenda", label: "Agenda", icon: CalendarClock },
-  { href: "/metas", label: "Metas", icon: Target },
   { href: "/atividades", label: "Tarefas", icon: CheckCircle2 },
-  { href: "/livraria", label: "Livros", icon: Library },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/perfil", label: "Perfil", icon: UserRound },
   { href: "/configuracoes", label: "Config.", icon: Settings },
 ]

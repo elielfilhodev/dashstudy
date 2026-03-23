@@ -49,6 +49,13 @@ model User {
   bookNotes     BookNote[]
   bookComments  BookComment[]
 
+  // Chat
+  adminGroups       ChatGroup[]       @relation("GroupAdmin")
+  coAdminGroups     ChatGroup[]       @relation("GroupCoAdmin")
+  groupMemberships  ChatGroupMember[]
+  sentMessages      Message[]         @relation("MessageSender")
+  receivedMessages  Message[]         @relation("MessageRecipient")
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -146,10 +153,11 @@ model Task {
   userId    String
   subjectId String?
 
-  title   String
-  details String  @default("")
-  dueDate String
-  done    Boolean @default(false)
+  title         String
+  details       String  @default("")
+  dueDate       String
+  scheduledTime String?
+  done          Boolean @default(false)
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
@@ -277,4 +285,59 @@ model BookComment {
   createdAt DateTime @default(now())
 
   @@index([bookId])
+}
+
+// ---------------------------------------------------------------------------
+// Chat (mensagens diretas e grupos)
+// ---------------------------------------------------------------------------
+
+model ChatGroup {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
+  adminId   String
+  coAdminId String?
+
+  admin   User  @relation("GroupAdmin",   fields: [adminId],   references: [id])
+  coAdmin User? @relation("GroupCoAdmin", fields: [coAdminId], references: [id])
+
+  members  ChatGroupMember[]
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatGroupMember {
+  id      String @id @default(cuid())
+  groupId String
+  userId  String
+
+  group ChatGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  senderId    String
+  recipientId String?
+  groupId     String?
+
+  sender    User       @relation("MessageSender",    fields: [senderId],    references: [id])
+  recipient User?      @relation("MessageRecipient", fields: [recipientId], references: [id])
+  group     ChatGroup? @relation(fields: [groupId],  references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([groupId])
 }
