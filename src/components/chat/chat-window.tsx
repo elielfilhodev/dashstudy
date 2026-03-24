@@ -26,10 +26,10 @@ import type {
 // ---------------------------------------------------------------------------
 // Fetcher alinhado com o SWRProvider global
 // ---------------------------------------------------------------------------
-const fetcher = (url: string) =>
+const fetcher = (url: string): Promise<ChatMessage[]> =>
   fetch(url).then((r) => {
     if (!r.ok) throw new Error("Fetch error")
-    return r.json().then((j: { data?: unknown }) => j.data)
+    return r.json().then((j: { data?: ChatMessage[] }) => j.data ?? [])
   })
 
 // ---------------------------------------------------------------------------
