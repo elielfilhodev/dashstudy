@@ -1,10 +1,5 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react"
-import { Send } from "lucide-react"
-import dynamic from "next/dynamic"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import {
   useEffect,
   useRef,
@@ -12,6 +7,7 @@ import {
   useCallback,
   useMemo,
 } from "react"
+import dynamic from "next/dynamic"
 import { Send, Image, FileText, X, Loader2, Smile } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
