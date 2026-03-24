@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { requireAuth } from "@/lib/session"
 import { ok, created, badRequest, forbidden, notFound, serverError } from "@/lib/api-response"
 import { sendMessageSchema } from "@/lib/validations"
+import type { MessageAttachmentType } from "@/types"
 
 const userSelect = {
   id: true,
@@ -12,6 +13,39 @@ const userSelect = {
   image: true,
   lastSeenAt: true,
 } as const
+
+type SerializableMessage = {
+  id: string
+  content: string
+  senderId: string
+  recipientId: string | null
+  groupId: string | null
+  createdAt: Date
+  sender: {
+    id: string
+    name: string | null
+    username: string | null
+    displayId: string
+    image: string | null
+    lastSeenAt: Date | null
+  }
+  [key: string]: unknown
+}
+
+function serializeMessage(m: SerializableMessage) {
+  return {
+    id: m.id,
+    content: m.content,
+    attachmentUrl: (m.attachmentUrl as string | null) ?? null,
+    attachmentType: (m.attachmentType as MessageAttachmentType | null) ?? null,
+    attachmentName: (m.attachmentName as string | null) ?? null,
+    senderId: m.senderId,
+    sender: { ...m.sender, online: false },
+    recipientId: m.recipientId,
+    groupId: m.groupId,
+    createdAt: m.createdAt.toISOString(),
+  }
+}
 
 // GET /api/chat/groups/[groupId]/messages
 export async function GET(
@@ -42,17 +76,7 @@ export async function GET(
       take: 50,
     })
 
-    return ok(
-      messages.map((m) => ({
-        id: m.id,
-        content: m.content,
-        senderId: m.senderId,
-        sender: { ...m.sender, online: false },
-        recipientId: m.recipientId,
-        groupId: m.groupId,
-        createdAt: m.createdAt.toISOString(),
-      }))
-    )
+    return ok((messages as SerializableMessage[]).map(serializeMessage))
   } catch (err) {
     return serverError(err)
   }
@@ -81,20 +105,20 @@ export async function POST(
     const parsed = sendMessageSchema.safeParse(body)
     if (!parsed.success) return badRequest(parsed.error.issues[0]?.message ?? "Dados inválidos")
 
-    const msg = await db.message.create({
-      data: { content: parsed.data.content, senderId: userId, groupId },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const msg = await (db.message.create as any)({
+      data: {
+        content: parsed.data.content,
+        attachmentUrl: parsed.data.attachmentUrl ?? null,
+        attachmentType: parsed.data.attachmentType ?? null,
+        attachmentName: parsed.data.attachmentName ?? null,
+        senderId: userId,
+        groupId,
+      },
       include: { sender: { select: userSelect } },
-    })
+    }) as SerializableMessage
 
-    return created({
-      id: msg.id,
-      content: msg.content,
-      senderId: msg.senderId,
-      sender: { ...msg.sender, online: false },
-      recipientId: msg.recipientId,
-      groupId: msg.groupId,
-      createdAt: msg.createdAt.toISOString(),
-    })
+    return created(serializeMessage(msg))
   } catch (err) {
     return serverError(err)
   }

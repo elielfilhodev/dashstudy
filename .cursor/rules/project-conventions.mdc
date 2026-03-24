@@ -1,0 +1,147 @@
+---
+description: Convenções e regras do projeto Dash Estudos — lidas automaticamente em toda sessão
+alwaysApply: true
+---
+
+# Dash Estudos — Convenções do Projeto
+
+## Stack principal
+- **Next.js 16** (App Router, React 19)
+- **TypeScript** strict mode
+- **Tailwind CSS 4** + **shadcn/ui** (Radix primitives)
+- **Prisma 5** + **PostgreSQL** (Neon serverless em produção)
+- **NextAuth v5 beta** (JWT sessions)
+- **SWR 2** para data fetching no cliente
+- **Zod 4** para validação
+- **Vercel Blob** para upload de arquivos
+
+---
+
+## Regras críticas — nunca violar
+
+### TypeScript
+- Nunca use `any` implícito; prefira tipos explícitos ou `unknown`
+- Sempre atualize `src/types/index.ts` ao adicionar campos aos modelos Prisma usados no cliente
+- Após alterar o schema Prisma, rode `npx prisma db push` (dev) ou crie uma migration SQL
+
+### Rotas de API
+- Todo handler começa com `const { userId, error } = await requireAuth(); if (error) return error`
+- Use os helpers de `src/lib/api-response.ts`: `ok`, `created`, `badRequest`, `forbidden`, `notFound`, `noContent`, `serverError`
+- Nunca exponha stack traces ao cliente; use apenas `serverError(err)` no catch
+- Valide toda entrada com Zod antes de qualquer query DB; use `schema.safeParse(body)`
+
+### Banco de dados
+- Nunca faça N+1 queries; use `include` / `select` em vez de loops com `findUnique`
+- Selecione apenas os campos necessários com `select` — evite `findMany` sem `select` em tabelas com blobs
+- O campo `coverBlob` do modelo `Book` NUNCA deve ser incluído em listagens; use `bookListSelect` de `src/lib/book-serialize.ts`
+- Ao criar novas queries de listagem, use `select` para limitar os campos retornados
+
+### SWR / Data fetching no cliente
+- **Não crie fetchers locais** em componentes; use sempre o fetcher global do `SWRProvider` (não passe `fetcher` no useSWR)
+- Exceção: o `chat-window.tsx` mantém fetcher próprio pois precisa de tratamento especial de erros
+- Após mutações que afetam dados em outros componentes, use `useSWRConfig().mutate(key)` para invalidar o cache global
+- Exemplo obrigatório: após completar uma tarefa, chamar `globalMutate("/api/gamification")` para atualizar a sidebar
+
+### Chat
+- Toda nova feature de mensagem deve atualizar AMBAS as rotas: DM (`/api/chat/direct/[userId]`) e grupo (`/api/chat/groups/[groupId]/messages`)
+- O helper `serializeMessage` em cada rota de chat garante o formato consistente de resposta; atualize-o ao adicionar campos
+- Attachments: o schema `sendMessageSchema` valida que `content` ou `attachmentUrl` deve estar presente
+
+### Gamification / Ofensivas
+- A gamification é chamada **antes** de marcar a tarefa como done (ver `tasks-view.tsx` `handleToggle`)
+- O campo `lastCompletionDate` é armazenado como string `YYYY-MM-DD` (UTC)
+- A lógica de streak está em `src/app/api/gamification/route.ts`; não duplique em outros lugares
+- Após qualquer ação que altere XP/streak, invalidar `/api/gamification` no SWR
+
+---
+
+## Padrões de componentes
+
+### Novo componente de página
+```tsx
+// src/app/(dashboard)/nova-rota/page.tsx
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { redirect } from "next/navigation"
+import { NomeView } from "@/components/nome/nome-view"
+
+export default async function NomePage() {
+  const session = await auth()
+  if (!session?.user?.id) redirect("/login")
+
+  const data = await db.modelo.findMany({ where: { userId: session.user.id } })
+  return <NomeView initialData={data} />
+}
+```
+
+### Componente cliente com SWR
+```tsx
+"use client"
+import useSWR from "swr"
+
+// NÃO faça:
+// const fetcher = (url) => fetch(url).then(r => r.json())
+// useSWR(key, fetcher)
+
+// FAÇA (usa o fetcher global do SWRProvider):
+const { data } = useSWR<TipoCorreto>("/api/rota")
+```
+
+### Formulário com mutação
+```tsx
+async function handleSubmit() {
+  const res = await fetch("/api/rota", { method: "POST", ... })
+  const json = await res.json()
+  if (!res.ok) { toast.error(json.error ?? "Erro"); return }
+  toast.success("Salvo!")
+  revalidate() // mutate do useSWR local
+  globalMutate("/api/outro-recurso") // se necessário
+}
+```
+
+---
+
+## Estrutura de arquivos
+
+```
+src/
+  app/
+    (auth)/          — páginas públicas (login, register, reset-password)
+    (dashboard)/     — rotas protegidas (layout com DashboardShell)
+    api/             — route handlers Next.js
+  components/
+    layout/          — shell, sidebar, providers, mobile-nav
+    ui/              — componentes shadcn/ui (não editar diretamente)
+    [dominio]/       — um diretório por domínio (tasks, chat, agenda, etc.)
+  lib/
+    auth.ts          — configuração NextAuth
+    db.ts            — singleton Prisma
+    session.ts       — requireAuth()
+    api-response.ts  — helpers de resposta
+    gamification.ts  — levelFromXp, rankFromLevel, ACHIEVEMENTS
+    validations.ts   — schemas Zod
+  types/
+    index.ts         — tipos de domínio do cliente
+```
+
+---
+
+## Env vars necessárias
+
+| Variável | Descrição |
+|---|---|
+| `DATABASE_URL` | PostgreSQL (Neon) |
+| `NEXTAUTH_SECRET` | Segredo JWT |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob (upload de arquivos no chat) |
+| `TENOR_API_KEY` | Tenor API para GIFs no chat |
+
+---
+
+## O que NÃO fazer
+
+- ❌ Nunca use `console.log` em produção (o `next.config.ts` já remove em build)
+- ❌ Nunca faça `prisma.modelo.findMany()` sem `where: { userId }` em dados do usuário
+- ❌ Nunca exponha o `coverBlob` de livros em listagens
+- ❌ Nunca quebre o formato de retorno das APIs sem atualizar os tipos em `src/types/index.ts`
+- ❌ Nunca adicione um `fetcher` local em componentes que já usam o SWRProvider global
+- ❌ Nunca chame `POST /api/gamification` após o PATCH de `done: true` (tarefa já estaria done)

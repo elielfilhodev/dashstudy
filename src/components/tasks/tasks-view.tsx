@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils"
 import { formatDate } from "@/lib/date-utils"
 import { ACHIEVEMENTS } from "@/lib/gamification"
 import type { Task } from "@/types"
-import useSWR from "swr"
+import useSWR, { useSWRConfig } from "swr"
 import { toast } from "sonner"
 
 type SubjectRef = { id: string; name: string }
@@ -53,6 +53,7 @@ export function TasksView({
   initialTasks: Task[]
   subjects: SubjectRef[]
 }) {
+  const { mutate: globalMutate } = useSWRConfig()
   const { data: tasks = initialTasks, mutate: revalidate } = useSWR<Task[]>(
     "/api/tasks",
     fetcher,
@@ -111,9 +112,10 @@ export function TasksView({
         | undefined
 
       if (payload && !payload.skipped) {
-        toast.success("Tarefa concluída", {
-          description: task.title,
-        })
+        // Invalida o cache global de gamification para atualizar sidebar imediatamente
+        globalMutate("/api/gamification")
+
+        toast.success("Tarefa concluída", { description: task.title })
         if (payload.reward?.xpEarned != null && payload.reward.xpEarned > 0) {
           toast.message(`+${payload.reward.xpEarned} XP`, {
             id: `xp-${task.id}-${Date.now()}`,
