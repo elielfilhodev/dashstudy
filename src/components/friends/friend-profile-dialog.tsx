@@ -63,7 +63,6 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
   const xp = g?.xp ?? 0
   const levelInfo = levelFromXp(xp)
   const rank = rankFromLevel(levelInfo.level)
-  const isEliteRank = !!rank.avatarBorder
   const streakActive = (g?.streakDays ?? 0) > 0
 
   const avatarFallback = (u?.name ?? "?")
@@ -101,24 +100,27 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
 
         {!isLoading && !error && u && g && (
           <div className="space-y-4">
-            <div
-              className={cn(
-                "rounded-lg border p-4",
-                isEliteRank && "border-2",
-                rank.key === "mestre" && "border-red-500/40",
-                rank.key === "grao-mestre" && "border-purple-500/40",
-                rank.key === "genio" && "border-yellow-500/40"
-              )}
-            >
+            <div className="rounded-lg border p-4">
               <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
                 <div className="relative shrink-0">
-                  <Avatar className={cn("size-16", rank.avatarBorder)}>
-                    {u.image ? <AvatarImage src={u.image} alt={u.name} /> : null}
-                    <AvatarFallback className="text-lg">{avatarFallback}</AvatarFallback>
-                  </Avatar>
-                  {isEliteRank && (
-                    <span className="absolute -bottom-0.5 -right-0.5 text-base">{rank.icon}</span>
+                  {rank.key === "genio" ? (
+                    <div className="avatar-rank-genio-wrapper">
+                      <div className="avatar-rank-genio-inner">
+                        <Avatar className="size-16">
+                          {u.image ? <AvatarImage src={u.image} alt={u.name} /> : null}
+                          <AvatarFallback className="text-lg">{avatarFallback}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={cn("rounded-full p-[3px] bg-background", rank.avatarBorder)}>
+                      <Avatar className="size-16">
+                        {u.image ? <AvatarImage src={u.image} alt={u.name} /> : null}
+                        <AvatarFallback className="text-lg">{avatarFallback}</AvatarFallback>
+                      </Avatar>
+                    </div>
                   )}
+                  <span className="absolute -bottom-0.5 -right-0.5 text-base">{rank.icon}</span>
                 </div>
                 <div className="text-center sm:text-left flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{u.name}</h3>

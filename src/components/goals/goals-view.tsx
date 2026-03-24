@@ -18,12 +18,9 @@ import type { Goal } from "@/types"
 import useSWR from "swr"
 import { toast } from "sonner"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
-
 export function GoalsView({ initialGoals }: { initialGoals: Goal[] }) {
   const { data: goals = initialGoals, mutate: revalidate } = useSWR<Goal[]>(
     "/api/goals",
-    fetcher,
     { fallbackData: initialGoals }
   )
 

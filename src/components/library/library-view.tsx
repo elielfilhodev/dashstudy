@@ -44,12 +44,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
-const fetcher = (url: string) =>
-  fetch(url).then((r) => {
-    if (!r.ok) throw new Error("Falha ao carregar")
-    return r.json()
-  }).then((j) => j.data)
-
 interface FriendUser {
   id: string
   name: string
@@ -172,7 +166,7 @@ export function LibraryView({ initialBooks }: { initialBooks: BookListItem[] }) 
   const [newOpen, setNewOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const { data: friendsPayload } = useSWR<{ friends: FriendUser[] }>("/api/friends", fetcher, {
+  const { data: friendsPayload } = useSWR<{ friends: FriendUser[] }>("/api/friends", {
     revalidateOnFocus: false,
     dedupingInterval: 60_000,
   })
@@ -186,7 +180,7 @@ export function LibraryView({ initialBooks }: { initialBooks: BookListItem[] }) 
     data: myBooks = initialBooks,
     mutate: mutateMine,
     isLoading: loadingMine,
-  } = useSWR<BookListItem[]>(mineKey, fetcher, {
+  } = useSWR<BookListItem[]>(mineKey, {
     fallbackData: initialBooks,
     revalidateOnFocus: false,
     dedupingInterval: 30_000,
@@ -196,7 +190,7 @@ export function LibraryView({ initialBooks }: { initialBooks: BookListItem[] }) 
     data: friendBooks = [],
     mutate: mutateFriendBooks,
     isLoading: loadingFriendBooks,
-  } = useSWR<BookListItem[]>(friendBooksKey, fetcher, {
+  } = useSWR<BookListItem[]>(friendBooksKey, {
     revalidateOnFocus: false,
     dedupingInterval: 30_000,
   })
@@ -209,7 +203,7 @@ export function LibraryView({ initialBooks }: { initialBooks: BookListItem[] }) 
     data: detail,
     mutate: mutateDetail,
     isLoading: detailLoading,
-  } = useSWR<DetailPayload>(detailKey, fetcher, {
+  } = useSWR<DetailPayload>(detailKey, {
     revalidateOnFocus: false,
   })
 

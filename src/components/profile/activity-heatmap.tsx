@@ -52,8 +52,6 @@ function buildGrid(counts: Record<string, number>) {
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
-
 interface Props {
   rankKey: RankKey
 }
@@ -61,7 +59,6 @@ interface Props {
 export function ActivityHeatmap({ rankKey }: Props) {
   const { data: counts = {} } = useSWR<Record<string, number>>(
     "/api/profile/activity",
-    fetcher,
     { refreshInterval: 0 }
   )
 

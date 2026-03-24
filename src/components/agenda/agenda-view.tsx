@@ -40,7 +40,6 @@ import { toast } from "sonner"
 type SubjectRef = { id: string; name: string }
 type Mode = "semana" | "mes"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
 const todayStr = formatDate(new Date())
 
 const HOUR_SLOTS = Array.from({ length: 16 }, (_, i) => i + 7)
@@ -63,7 +62,6 @@ export function AgendaView({
 }) {
   const { data: items = initialItems, mutate: revalidate } = useSWR<AgendaItem[]>(
     "/api/agenda",
-    fetcher,
     { fallbackData: initialItems }
   )
 

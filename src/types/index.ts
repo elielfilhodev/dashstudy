@@ -88,7 +88,7 @@ export type RankInfo = {
   key: RankKey
   label: string
   className: string
-  avatarBorder?: string // only for top 3 ranks
+  avatarBorder: string
   icon?: string
 }
 

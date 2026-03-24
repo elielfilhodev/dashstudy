@@ -23,12 +23,9 @@ const SUBJECT_COLORS = [
   "#ca8a04", "#7c3aed", "#db2777", "#0891b2",
 ]
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
-
 export function SubjectsView({ initialSubjects }: { initialSubjects: Subject[] }) {
   const { data: subjects = initialSubjects, mutate: revalidate } = useSWR<Subject[]>(
     "/api/subjects",
-    fetcher,
     { fallbackData: initialSubjects }
   )
 

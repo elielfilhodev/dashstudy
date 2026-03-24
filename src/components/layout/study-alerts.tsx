@@ -8,8 +8,6 @@ import { AlertTriangle, CalendarClock, CalendarDays, ListTodo } from "lucide-rea
 import { formatDate } from "@/lib/date-utils"
 import type { AgendaItem, Task } from "@/types"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
-
 function storageKey(kind: string, day: string) {
   return `dash-study-alert-${kind}-${day}`
 }
@@ -39,10 +37,9 @@ function tomorrowStr(): string {
 export function StudyAlerts() {
   const { status } = useSession()
 
-  const { data: tasks } = useSWR<Task[]>(status === "authenticated" ? "/api/tasks" : null, fetcher)
+  const { data: tasks } = useSWR<Task[]>(status === "authenticated" ? "/api/tasks" : null)
   const { data: agenda } = useSWR<AgendaItem[]>(
-    status === "authenticated" ? "/api/agenda" : null,
-    fetcher
+    status === "authenticated" ? "/api/agenda" : null
   )
 
   useEffect(() => {

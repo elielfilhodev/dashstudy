@@ -12,7 +12,7 @@ export async function GET() {
     const tasks = await db.task.findMany({
       where: { userId },
       include: { subject: { select: { id: true, name: true } } },
-      orderBy: [{ dueDate: "asc" }, { createdAt: "asc" }],
+      orderBy: [{ createdAt: "desc" }],
     })
     return ok(tasks)
   } catch (err) {

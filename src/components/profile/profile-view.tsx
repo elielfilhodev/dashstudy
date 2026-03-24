@@ -1,11 +1,24 @@
 "use client"
 
-import { Activity, Flame, Medal, Star, Trophy, Zap } from "lucide-react"
+import { useRef, useState } from "react"
+import { Activity, Camera, Flame, ImagePlus, Loader2, Medal, Star, Trophy, X, Zap } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { levelFromXp, rankFromLevel, ACHIEVEMENTS, RANK_THRESHOLDS } from "@/lib/gamification"
 import { FriendsCard } from "@/components/friends/friends-card"
@@ -19,6 +32,7 @@ interface Props {
     image: string | null
     username: string | null
     displayId: string
+    bannerHref: string | null
   }
   gamification: Gamification | null
 }
@@ -42,7 +56,6 @@ export function ProfileView({ user, gamification }: Props) {
   const levelInfo = levelFromXp(xp)
   const rank = rankFromLevel(levelInfo.level)
   const streakActive = streakDays > 0
-  const isEliteRank = !!rank.avatarBorder
 
   const avatarFallback = user.name
     .split(" ")
@@ -51,6 +64,70 @@ export function ProfileView({ user, gamification }: Props) {
     .join("")
     .toUpperCase()
 
+  const [bannerHref, setBannerHref] = useState(user.bannerHref)
+  const [bannerDialogOpen, setBannerDialogOpen] = useState(false)
+  const [bannerUrl, setBannerUrl] = useState("")
+  const [savingBanner, setSavingBanner] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleBannerUrl(e: React.FormEvent) {
+    e.preventDefault()
+    if (!bannerUrl.trim()) return
+    setSavingBanner(true)
+    try {
+      const res = await fetch("/api/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "banner-url", bannerUrl: bannerUrl.trim() }),
+      })
+      if (!res.ok) {
+        const j = await res.json()
+        toast.error(j.error ?? "Erro ao salvar banner")
+        return
+      }
+      setBannerHref(bannerUrl.trim())
+      setBannerUrl("")
+      setBannerDialogOpen(false)
+      toast.success("Banner atualizado")
+    } finally {
+      setSavingBanner(false)
+    }
+  }
+
+  async function handleBannerFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSavingBanner(true)
+    try {
+      const form = new FormData()
+      form.append("file", file)
+      const res = await fetch("/api/user/banner", { method: "POST", body: form })
+      const j = await res.json()
+      if (!res.ok) {
+        toast.error(j.error ?? "Erro ao enviar banner")
+        return
+      }
+      setBannerHref(`/api/user/banner?t=${Date.now()}`)
+      setBannerDialogOpen(false)
+      toast.success("Banner atualizado")
+    } finally {
+      setSavingBanner(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  async function handleRemoveBanner() {
+    setSavingBanner(true)
+    try {
+      await fetch("/api/user/banner", { method: "DELETE" })
+      setBannerHref(null)
+      setBannerDialogOpen(false)
+      toast.success("Banner removido")
+    } finally {
+      setSavingBanner(false)
+    }
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-2xl mx-auto animate-in fade-in duration-300">
       <div>
@@ -58,30 +135,75 @@ export function ProfileView({ user, gamification }: Props) {
         <p className="text-muted-foreground text-sm">Suas conquistas e estatísticas</p>
       </div>
 
-      {/* User card */}
-      <Card
-        className={cn(
-          isEliteRank && "border-2",
-          rank.key === "mestre" && "border-red-500/50",
-          rank.key === "grao-mestre" && "border-purple-500/50",
-          rank.key === "genio" && "border-yellow-500/50"
-        )}
-      >
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            {/* Avatar with elite border */}
-            <div className="relative shrink-0">
-              <Avatar className={cn("size-20", rank.avatarBorder)}>
-                {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-                <AvatarFallback className="text-xl">{avatarFallback}</AvatarFallback>
-              </Avatar>
-              {isEliteRank && (
-                <span className="absolute -bottom-1 -right-1 text-lg">{rank.icon}</span>
+      {/* User card with banner */}
+      <Card className="overflow-hidden">
+        {/* Banner */}
+        <div className="relative h-32 sm:h-40 group">
+          {bannerHref ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={bannerHref}
+              alt="Banner do perfil"
+              className="w-full h-full object-cover"
+              loading="eager"
+            />
+          ) : (
+            <div
+              className={cn(
+                "w-full h-full",
+                rank.key === "genio" && "bg-linear-to-r from-yellow-400 via-pink-500 to-purple-600",
+                rank.key === "grao-mestre" && "bg-linear-to-r from-red-700 to-purple-700",
+                rank.key === "mestre" && "bg-linear-to-r from-purple-600 to-red-600",
+                rank.key === "diamante" && "bg-linear-to-r from-sky-400 to-blue-600",
+                rank.key === "esmeralda" && "bg-linear-to-r from-emerald-400 to-teal-600",
+                rank.key === "platina" && "bg-linear-to-r from-cyan-400 to-violet-500",
+                rank.key === "ouro" && "bg-linear-to-r from-yellow-400 to-amber-600",
+                rank.key === "prata" && "bg-linear-to-r from-zinc-300 to-zinc-500",
+                rank.key === "bronze" && "bg-linear-to-r from-amber-700 to-orange-800",
               )}
+            />
+          )}
+          <button
+            onClick={() => setBannerDialogOpen(true)}
+            className={cn(
+              "absolute inset-0 flex items-center justify-center gap-2",
+              "bg-black/0 group-hover:bg-black/40 transition-all",
+              "text-transparent group-hover:text-white text-sm font-medium"
+            )}
+            title="Alterar banner"
+          >
+            <Camera className="size-4" />
+            Alterar banner
+          </button>
+        </div>
+
+        <CardContent className="pt-0">
+          {/* Avatar — overlapping the banner */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10 sm:-mt-12 mb-4">
+            <div className="relative shrink-0 self-start sm:self-auto">
+              {rank.key === "genio" ? (
+                <div className="avatar-rank-genio-wrapper">
+                  <div className="avatar-rank-genio-inner">
+                    <Avatar className="size-20 sm:size-24">
+                      {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                      <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+              ) : (
+                /* wrapper recebe a borda de elo; padding + bg criam o anel de separação */
+                <div className={cn("rounded-full p-1 bg-background", rank.avatarBorder)}>
+                  <Avatar className="size-20 sm:size-24">
+                    {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                    <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
+              <span className="absolute -bottom-1 -right-1 text-xl">{rank.icon}</span>
             </div>
 
-            <div className="text-center sm:text-left flex-1">
-              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+            <div className="flex-1 pb-1">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold">{user.name}</h2>
                 {user.username && (
                   <span className="text-sm text-muted-foreground">@{user.username}</span>
@@ -96,7 +218,7 @@ export function ProfileView({ user, gamification }: Props) {
               <p className="text-xs text-muted-foreground/70 font-mono mt-0.5">
                 #{user.displayId.slice(0, 6).toUpperCase()}
               </p>
-              <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start flex-wrap">
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <Badge className={cn("text-xs", rank.className)}>
                   {rank.icon} {rank.label}
                 </Badge>
@@ -131,6 +253,80 @@ export function ProfileView({ user, gamification }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Banner edit dialog */}
+      <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ImagePlus className="size-4" /> Banner do perfil
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Use uma imagem do seu computador ou cole a URL de uma imagem online.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Upload file */}
+            <div>
+              <Label className="text-xs mb-1.5 block">Enviar arquivo (JPG, PNG, WebP, GIF · máx 4 MB)</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleBannerFile}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={savingBanner}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {savingBanner ? <Loader2 className="size-4 animate-spin mr-2" /> : <Camera className="size-4 mr-2" />}
+                Escolher arquivo
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Separator className="flex-1" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">ou</span>
+              <Separator className="flex-1" />
+            </div>
+
+            {/* URL */}
+            <form onSubmit={handleBannerUrl} className="space-y-2">
+              <Label htmlFor="banner-url" className="text-xs">URL da imagem</Label>
+              <Input
+                id="banner-url"
+                placeholder="https://exemplo.com/banner.jpg"
+                value={bannerUrl}
+                onChange={(e) => setBannerUrl(e.target.value)}
+                className="text-sm"
+              />
+              <Button type="submit" className="w-full" disabled={!bannerUrl.trim() || savingBanner}>
+                {savingBanner ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+                Salvar URL
+              </Button>
+            </form>
+          </div>
+
+          {bannerHref && (
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-destructive hover:text-destructive"
+                onClick={handleRemoveBanner}
+                disabled={savingBanner}
+              >
+                <X className="size-3.5 mr-1.5" /> Remover banner
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Activity heatmap */}
       <Card>

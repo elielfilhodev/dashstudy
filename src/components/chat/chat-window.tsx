@@ -7,11 +7,11 @@ import {
   useCallback,
   useMemo,
 } from "react"
+import dynamic from "next/dynamic"
 import { Send, Image, FileText, X, Loader2, Smile } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GroupSettingsDialog } from "./group-settings-dialog"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import useSWR from "swr"
@@ -23,15 +23,10 @@ import type {
   MessageAttachmentType,
 } from "@/types"
 
-// ---------------------------------------------------------------------------
-// Fetcher alinhado com o SWRProvider global
-// ---------------------------------------------------------------------------
-const fetcher = (url: string): Promise<ChatMessage[]> =>
-  fetch(url).then((r) => {
-    if (!r.ok) throw new Error("Fetch error")
-    return r.json().then((j: { data?: ChatMessage[] }) => j.data ?? [])
-  })
-
+const GroupSettingsDialog = dynamic(
+  () => import("./group-settings-dialog").then((m) => m.GroupSettingsDialog),
+  { ssr: false }
+)
 // ---------------------------------------------------------------------------
 // Helpers de texto
 // ---------------------------------------------------------------------------
@@ -212,11 +207,12 @@ export function ChatWindow({
     ? `/api/chat/direct/${conversation.friend.id}`
     : `/api/chat/groups/${conversation.group.id}/messages`
 
-  const { data: messages = [], mutate } = useSWR<ChatMessage[]>(apiUrl, fetcher, {
-    refreshInterval: () =>
-      typeof document !== "undefined" && document.hidden ? 0 : 5000,
-    dedupingInterval: 3000,
-  })
+// Pausa o polling quando a aba está em background para evitar requests desnecessários
+const { data: messages = [], mutate } = useSWR<ChatMessage[]>(apiUrl, {
+  refreshInterval: () =>
+    typeof document !== "undefined" && document.hidden ? 0 : 12_000,
+  dedupingInterval: 3000,
+})
 
   // --- estado do formulário ---
   const [text, setText] = useState("")

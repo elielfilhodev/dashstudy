@@ -28,7 +28,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "genio",
       label: "Gênio",
       className: "bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 text-white",
-      avatarBorder: "ring-4 ring-offset-2 ring-offset-background ring-gradient-to-r from-yellow-400 via-pink-500 to-purple-600",
+      avatarBorder: "avatar-rank-genio",
       icon: "✨",
     }
   if (level >= 75)
@@ -36,7 +36,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "grao-mestre",
       label: "Grão-Mestre",
       className: "bg-purple-700 text-white",
-      avatarBorder: "ring-4 ring-offset-2 ring-offset-background ring-purple-600",
+      avatarBorder: "avatar-rank-grao-mestre",
       icon: "👑",
     }
   if (level >= 60)
@@ -44,7 +44,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "mestre",
       label: "Mestre",
       className: "bg-red-600 text-white",
-      avatarBorder: "ring-4 ring-offset-2 ring-offset-background ring-red-500",
+      avatarBorder: "avatar-rank-mestre",
       icon: "🔥",
     }
   if (level >= 50)
@@ -52,6 +52,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "diamante",
       label: "Diamante",
       className: "bg-sky-500 text-white",
+      avatarBorder: "avatar-rank-diamante",
       icon: "💎",
     }
   if (level >= 40)
@@ -59,6 +60,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "esmeralda",
       label: "Esmeralda",
       className: "bg-emerald-500 text-white",
+      avatarBorder: "avatar-rank-esmeralda",
       icon: "💚",
     }
   if (level >= 30)
@@ -66,6 +68,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "platina",
       label: "Platina",
       className: "bg-violet-500 text-white",
+      avatarBorder: "avatar-rank-platina",
       icon: "🔷",
     }
   if (level >= 20)
@@ -73,6 +76,7 @@ export function rankFromLevel(level: number): RankInfo {
       key: "ouro",
       label: "Ouro",
       className: "bg-yellow-500 text-black",
+      avatarBorder: "avatar-rank-ouro",
       icon: "🥇",
     }
   if (level >= 10)
@@ -80,12 +84,14 @@ export function rankFromLevel(level: number): RankInfo {
       key: "prata",
       label: "Prata",
       className: "bg-zinc-400 text-black",
+      avatarBorder: "avatar-rank-prata",
       icon: "🥈",
     }
   return {
     key: "bronze",
     label: "Bronze",
     className: "bg-orange-700 text-white",
+    avatarBorder: "avatar-rank-bronze",
     icon: "🥉",
   }
 }

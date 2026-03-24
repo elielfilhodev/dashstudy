@@ -29,6 +29,11 @@ model User {
   username      String?   @unique   // chosen at register, e.g. "eliel"
   displayId     String    @unique @default(cuid()) // short hash shown as #XXXX
 
+  // Banner do perfil
+  bannerUrl     String?
+  bannerMime    String?
+  bannerBlob    Bytes?
+
   // Presence
   lastSeenAt    DateTime?
 

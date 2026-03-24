@@ -29,7 +29,6 @@ import { toast } from "sonner"
 
 type SubjectRef = { id: string; name: string }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
 const todayStr = formatDate(new Date())
 
 function taskStatus(task: Task): "done" | "overdue" | "pending" {
@@ -56,7 +55,6 @@ export function TasksView({
   const { mutate: globalMutate } = useSWRConfig()
   const { data: tasks = initialTasks, mutate: revalidate } = useSWR<Task[]>(
     "/api/tasks",
-    fetcher,
     { fallbackData: initialTasks }
   )
 
@@ -77,7 +75,7 @@ export function TasksView({
     if (!form.title.trim() || !form.dueDate) return
     setSaving(true)
     try {
-      await fetch("/api/tasks", {
+      const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -88,8 +86,11 @@ export function TasksView({
           subjectId: form.subjectId || null,
         }),
       })
+      const json = await res.json()
+      const newTask = json.data as Task
       toast.success("Tarefa criada", { description: form.title.trim() })
       setForm(emptyForm)
+      revalidate((prev) => (prev ? [newTask, ...prev] : [newTask]), false)
       revalidate()
     } finally {
       setSaving(false)
@@ -147,6 +148,7 @@ export function TasksView({
   }
 
   async function handleDelete(id: string) {
+    revalidate((prev) => prev?.filter((t) => t.id !== id), false)
     await fetch(`/api/tasks/${id}`, { method: "DELETE" })
     revalidate()
   }
@@ -306,6 +308,7 @@ export function TasksView({
                       </Badge>
                       <button
                         onClick={() => handleDelete(task.id)}
+                        title="Excluir (XP e conquistas são preservados)"
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="size-3.5" />
