@@ -17,7 +17,7 @@ export async function GET() {
     })
 
     if (user?.bannerBlob && user.bannerMime) {
-      return new NextResponse(user.bannerBlob, {
+      return new NextResponse(new Uint8Array(user.bannerBlob), {
         headers: {
           "Content-Type": user.bannerMime,
           "Cache-Control": "private, max-age=86400",
