@@ -16,9 +16,13 @@ export default async function PerfilPage() {
     }),
     db.user.findUnique({
       where: { id: userId },
-      select: { username: true, displayId: true },
+      select: { username: true, displayId: true, bannerUrl: true, bannerBlob: true },
     }),
   ])
+
+  const bannerHref = userRecord?.bannerBlob
+    ? `/api/user/banner`
+    : userRecord?.bannerUrl ?? null
 
   return (
     <ProfileView
@@ -28,6 +32,7 @@ export default async function PerfilPage() {
         image: session.user.image ?? null,
         username: userRecord?.username ?? null,
         displayId: userRecord?.displayId ?? userId.slice(0, 6).toUpperCase(),
+        bannerHref,
       }}
       gamification={gamification}
     />

@@ -28,11 +28,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
+import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import { rankFromLevel, levelFromXp } from "@/lib/gamification"
-import { FriendProfileDialog } from "@/components/friends/friend-profile-dialog"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((d) => d.data)
+const FriendProfileDialog = dynamic(
+  () => import("@/components/friends/friend-profile-dialog").then((m) => m.FriendProfileDialog),
+  { ssr: false }
+)
 
 interface FriendUser {
   id: string
@@ -233,7 +236,7 @@ interface Props {
 }
 
 export function FriendsCard({ currentUsername, currentDisplayId }: Props) {
-  const { data, isLoading, mutate } = useSWR<FriendsData>("/api/friends", fetcher, {
+  const { data, isLoading, mutate } = useSWR<FriendsData>("/api/friends", {
     refreshInterval: 30_000,
   })
 

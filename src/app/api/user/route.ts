@@ -1,8 +1,14 @@
 import { NextRequest } from "next/server"
+import { z } from "zod"
 import { db } from "@/lib/db"
 import { requireAuth } from "@/lib/session"
 import { updateUsernameSchema, updateAvatarSchema } from "@/lib/validations"
 import { ok, badRequest, serverError } from "@/lib/api-response"
+
+const updateBannerUrlSchema = z.object({
+  action: z.literal("banner-url"),
+  bannerUrl: z.string().url("URL inválida").max(2048),
+})
 
 export async function PATCH(request: NextRequest) {
   const { userId, error } = await requireAuth()
@@ -50,7 +56,24 @@ export async function PATCH(request: NextRequest) {
       return ok(updated)
     }
 
-    return badRequest("Ação inválida. Use action: 'username' ou 'avatar'")
+    if (action === "banner-url") {
+      const parsed = updateBannerUrlSchema.safeParse(body)
+      if (!parsed.success) {
+        return badRequest(parsed.error.issues[0]?.message ?? "URL inválida")
+      }
+
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          bannerUrl: parsed.data.bannerUrl,
+          bannerBlob: null,
+          bannerMime: null,
+        },
+      })
+      return ok({ bannerUrl: parsed.data.bannerUrl })
+    }
+
+    return badRequest("Ação inválida. Use action: 'username', 'avatar' ou 'banner-url'")
   } catch (err) {
     return serverError(err)
   }

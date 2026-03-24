@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils"
 import useSWR from "swr"
 import type { ChatGroup, ChatUser, Conversation } from "@/types"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data)
-
 interface Props {
   meId: string
 }
@@ -17,15 +15,14 @@ interface Props {
 export function ChatView({ meId }: Props) {
   const { data: conversations = [], mutate: revalidateConvs } = useSWR<Conversation[]>(
     "/api/chat/conversations",
-    fetcher,
-    { refreshInterval: 5000 }
+    { refreshInterval: 12_000 }
   )
 
-  const { data: friends = [] } = useSWR<{ friends: ChatUser[] }>(
+  const { data: friendsData } = useSWR<{ friends: ChatUser[] }>(
     "/api/friends",
-    (url: string) => fetch(url).then((r) => r.json()).then((j) => j.data?.friends ?? []),
     { refreshInterval: 0 }
   )
+  const friends: ChatUser[] = friendsData?.friends ?? []
 
   const [active, setActive] = useState<Conversation | null>(null)
   const [sidebarVisible, setSidebarVisible] = useState(true)
@@ -99,7 +96,7 @@ export function ChatView({ meId }: Props) {
             <ChatWindow
               conversation={active}
               meId={meId}
-              friends={friends as ChatUser[]}
+              friends={friends}
               onGroupUpdated={handleGroupUpdated}
               onGroupLeft={handleGroupLeft}
             />
