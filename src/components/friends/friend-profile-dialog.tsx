@@ -113,10 +113,12 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
                       </div>
                     </div>
                   ) : (
-                    <Avatar className={cn("size-16", rank.avatarBorder)}>
-                      {u.image ? <AvatarImage src={u.image} alt={u.name} /> : null}
-                      <AvatarFallback className="text-lg">{avatarFallback}</AvatarFallback>
-                    </Avatar>
+                    <div className={cn("rounded-full p-[3px] bg-background", rank.avatarBorder)}>
+                      <Avatar className="size-16">
+                        {u.image ? <AvatarImage src={u.image} alt={u.name} /> : null}
+                        <AvatarFallback className="text-lg">{avatarFallback}</AvatarFallback>
+                      </Avatar>
+                    </div>
                   )}
                   <span className="absolute -bottom-0.5 -right-0.5 text-base">{rank.icon}</span>
                 </div>

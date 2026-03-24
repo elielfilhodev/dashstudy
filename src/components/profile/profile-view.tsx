@@ -182,19 +182,22 @@ export function ProfileView({ user, gamification }: Props) {
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10 sm:-mt-12 mb-4">
             <div className="relative shrink-0 self-start sm:self-auto">
               {rank.key === "genio" ? (
-                <div className="avatar-rank-genio-wrapper shadow-lg">
+                <div className="avatar-rank-genio-wrapper">
                   <div className="avatar-rank-genio-inner">
-                    <Avatar className="size-20 sm:size-24 ring-4 ring-background">
+                    <Avatar className="size-20 sm:size-24">
                       {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
                       <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
                     </Avatar>
                   </div>
                 </div>
               ) : (
-                <Avatar className={cn("size-20 sm:size-24 ring-4 ring-background shadow-lg", rank.avatarBorder)}>
-                  {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-                  <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
-                </Avatar>
+                /* wrapper recebe a borda de elo; padding + bg criam o anel de separação */
+                <div className={cn("rounded-full p-1 bg-background", rank.avatarBorder)}>
+                  <Avatar className="size-20 sm:size-24">
+                    {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                    <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
+                  </Avatar>
+                </div>
               )}
               <span className="absolute -bottom-1 -right-1 text-xl">{rank.icon}</span>
             </div>

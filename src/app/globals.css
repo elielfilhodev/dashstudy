@@ -134,46 +134,48 @@
   will-change: transform, opacity;
 }
 
-/* === Avatar rank borders — inspirado no League of Legends === */
+/* === Avatar rank borders — inspirado no League of Legends ===
+   Aplicar no WRAPPER div (rounded-full p-1 bg-background) que envolve o Avatar.
+   O box-shadow aqui não conflita com nenhuma propriedade do próprio Avatar. */
 
-/* Bronze: anel de cobre fino */
 .avatar-rank-bronze {
-  box-shadow: 0 0 0 2px #92400e;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px #92400e, 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* Prata: anel prateado */
 .avatar-rank-prata {
-  box-shadow: 0 0 0 2px #9ca3af;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px #9ca3af, 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* Ouro: anel dourado com brilho suave */
 .avatar-rank-ouro {
-  box-shadow: 0 0 0 2px #f59e0b, 0 0 8px rgba(245, 158, 11, 0.4);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px #f59e0b, 0 0 10px rgba(245, 158, 11, 0.4), 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
-/* Platina: anel ciano com brilho */
 .avatar-rank-platina {
-  box-shadow: 0 0 0 3px #22d3ee, 0 0 10px rgba(34, 211, 238, 0.35);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #22d3ee, 0 0 12px rgba(34, 211, 238, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Esmeralda: anel verde com brilho */
 .avatar-rank-esmeralda {
-  box-shadow: 0 0 0 3px #34d399, 0 0 12px rgba(52, 211, 153, 0.4);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #34d399, 0 0 14px rgba(52, 211, 153, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Diamante: anel azul gelo com brilho forte */
 .avatar-rank-diamante {
-  box-shadow: 0 0 0 3px #7dd3fc, 0 0 14px rgba(125, 211, 252, 0.55);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #7dd3fc, 0 0 16px rgba(125, 211, 252, 0.55), 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
-/* Mestre: anel roxo com halo */
 .avatar-rank-mestre {
-  box-shadow: 0 0 0 3px #a855f7, 0 0 0 5px rgba(168, 85, 247, 0.2), 0 0 16px rgba(168, 85, 247, 0.55);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #a855f7, 0 0 0 5px rgba(168, 85, 247, 0.2), 0 0 18px rgba(168, 85, 247, 0.55), 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
-/* Grão-Mestre: anel vermelho escarlate com duplo halo */
 .avatar-rank-grao-mestre {
-  box-shadow: 0 0 0 3px #ef4444, 0 0 0 6px rgba(239, 68, 68, 0.15), 0 0 20px rgba(239, 68, 68, 0.6);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #ef4444, 0 0 0 6px rgba(239, 68, 68, 0.15), 0 0 22px rgba(239, 68, 68, 0.6), 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 /* Gênio: borda com gradiente animado (aplicado via wrapper) */
