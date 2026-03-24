@@ -330,7 +330,12 @@ model ChatGroupMember {
 
 model Message {
   id      String @id @default(cuid())
-  content String @db.Text
+  content String @db.Text @default("")
+
+  /// Mídia anexada à mensagem (imagem, gif ou documento)
+  attachmentUrl  String? @db.Text  // URL pública do arquivo
+  attachmentType String?           // "image" | "gif" | "document"
+  attachmentName String?           // nome original do arquivo (para documentos)
 
   senderId    String
   recipientId String?

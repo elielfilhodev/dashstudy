@@ -167,6 +167,8 @@ export type ChatGroupMember = {
   joinedAt: string
 }
 
+export type MessageAttachmentType = "image" | "gif" | "document"
+
 export type ChatMessage = {
   id: string
   content: string
@@ -174,6 +176,9 @@ export type ChatMessage = {
   sender: ChatUser
   recipientId: string | null
   groupId: string | null
+  attachmentUrl: string | null
+  attachmentType: MessageAttachmentType | null
+  attachmentName: string | null
   createdAt: string
 }
 

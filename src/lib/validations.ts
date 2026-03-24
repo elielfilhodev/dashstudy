@@ -116,9 +116,17 @@ export const updateGroupSchema = z.object({
   coAdminId: z.string().cuid().optional().nullable(),
 })
 
-export const sendMessageSchema = z.object({
-  content: z.string().min(1, "Mensagem não pode ser vazia").max(4000),
-})
+export const sendMessageSchema = z
+  .object({
+    content: z.string().max(4000).default(""),
+    attachmentUrl: z.string().url().max(2048).optional().nullable(),
+    attachmentType: z.enum(["image", "gif", "document"]).optional().nullable(),
+    attachmentName: z.string().max(255).optional().nullable(),
+  })
+  .refine(
+    (d) => d.content.trim().length > 0 || !!d.attachmentUrl,
+    { message: "Envie uma mensagem ou anexe um arquivo" }
+  )
 
 export type CreateGroupInput = z.infer<typeof createGroupSchema>
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>
