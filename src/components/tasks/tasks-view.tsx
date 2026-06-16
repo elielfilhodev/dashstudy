@@ -100,6 +100,12 @@ export function TasksView({
   async function handleToggle(task: Task) {
     const willComplete = !task.done
 
+    // 1. Atualização Otimista: Altera a UI instantaneamente antes do servidor responder
+    revalidate(
+      (prev) => prev?.map((t) => (t.id === task.id ? { ...t, done: willComplete } : t)),
+      false
+    )
+
     if (willComplete) {
       // XP must be awarded BEFORE marking done — API checks task.done to prevent double rewards
       const gamRes = await fetch("/api/gamification", {
@@ -144,6 +150,7 @@ export function TasksView({
       body: JSON.stringify({ done: willComplete }),
     })
 
+    // 2. Sincroniza o estado real com o servidor após as requisições em background
     revalidate()
   }
 

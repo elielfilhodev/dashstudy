@@ -297,6 +297,31 @@ const { data: messages = [], mutate } = useSWR<ChatMessage[]>(apiUrl, {
           body.attachmentName = attachment.name
         }
 
+        // Otimização Otimista: Insere a mensagem visualmente antes de ir pro servidor
+        const tempId = `temp-${Date.now()}`
+        mutate(
+          (prev) => [
+            ...(prev ?? []),
+            {
+              id: tempId,
+              content,
+              attachmentUrl: attachment?.url ?? null,
+              attachmentType: attachment?.type ?? null,
+              attachmentName: attachment?.name ?? null,
+              senderId: meId,
+              recipientId: isDirect ? conversation.friend.id : null,
+              groupId: isDirect ? null : conversation.group.id,
+              createdAt: new Date().toISOString(),
+              sender: { id: meId, name: "Você", username: null, displayId: "", image: null, lastSeenAt: null },
+            } as ChatMessage,
+          ],
+          false
+        )
+
+        // Limpa o input instantaneamente
+        setText("")
+        setAttachment(null)
+
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -307,8 +332,6 @@ const { data: messages = [], mutate } = useSWR<ChatMessage[]>(apiUrl, {
           toast.error(j.error ?? "Erro ao enviar")
           return
         }
-        setText("")
-        setAttachment(null)
         mutate()
       } finally {
         setSending(false)

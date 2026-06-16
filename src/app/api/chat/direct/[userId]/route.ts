@@ -66,10 +66,15 @@ export async function GET(
   request: NextRequest,
   props: { params: Promise<{ userId: string }> }
 ) {
-  const { userId: meId, error } = await requireAuth()
+  // Paraleliza a autenticação e o parse de parâmetros
+  const [authRes, paramsRes] = await Promise.all([
+    requireAuth(),
+    props.params,
+  ])
+  const { userId: meId, error } = authRes
   if (error) return error
+  const { userId: otherId } = paramsRes
 
-  const { userId: otherId } = await props.params
   if (meId === otherId) return badRequest("Não é possível conversar consigo mesmo")
 
   try {
@@ -102,10 +107,15 @@ export async function POST(
   request: NextRequest,
   props: { params: Promise<{ userId: string }> }
 ) {
-  const { userId: meId, error } = await requireAuth()
+  // Paraleliza a resolução
+  const [authRes, paramsRes] = await Promise.all([
+    requireAuth(),
+    props.params,
+  ])
+  const { userId: meId, error } = authRes
   if (error) return error
+  const { userId: otherId } = paramsRes
 
-  const { userId: otherId } = await props.params
   if (meId === otherId) return badRequest("Não é possível conversar consigo mesmo")
 
   try {
@@ -116,8 +126,7 @@ export async function POST(
     const parsed = sendMessageSchema.safeParse(body)
     if (!parsed.success) return badRequest(parsed.error.issues[0]?.message ?? "Dados inválidos")
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const msg = await (db.message.create as any)({
+    const msg = await db.message.create({
       data: {
         content: parsed.data.content,
         attachmentUrl: parsed.data.attachmentUrl ?? null,
@@ -125,7 +134,7 @@ export async function POST(
         attachmentName: parsed.data.attachmentName ?? null,
         senderId: meId,
         recipientId: otherId,
-      },
+      } as any, // Isolamos o any apenas no payload de dados para manter typesafety na função create
       include: { sender: { select: userSelect } },
     }) as SerializableMessage
 

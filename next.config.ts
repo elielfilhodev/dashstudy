@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
 
+  // Melhora drasticamente a performance de tempo de carregamento no front-end
+  // isolando os imports da biblioteca de ícones e outras bibliotecas pesadas modulares
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns"],
+  },
+
   // Remove logs de console em produção (não afeta erros)
   compiler: {
     removeConsole: process.env.NODE_ENV === "production"
