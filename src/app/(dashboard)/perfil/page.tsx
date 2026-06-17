@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { ProfileView } from "@/components/profile/profile-view"
 import { redirect } from "next/navigation"
+import { serializeAcademicProfile } from "@/lib/academic"
 
 export default async function PerfilPage() {
   const session = await auth()
@@ -16,7 +17,13 @@ export default async function PerfilPage() {
     }),
     db.user.findUnique({
       where: { id: userId },
-      select: { username: true, displayId: true, bannerUrl: true, bannerBlob: true },
+      select: {
+        username: true,
+        displayId: true,
+        bannerUrl: true,
+        bannerBlob: true,
+        academicProfile: { include: { course: true } },
+      },
     }),
   ])
 
@@ -33,6 +40,7 @@ export default async function PerfilPage() {
         username: userRecord?.username ?? null,
         displayId: userRecord?.displayId ?? userId.slice(0, 6).toUpperCase(),
         bannerHref,
+        academic: serializeAcademicProfile(userRecord?.academicProfile),
       }}
       gamification={gamification}
     />

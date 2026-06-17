@@ -16,6 +16,8 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { ACHIEVEMENTS, levelFromXp, rankFromLevel } from "@/lib/gamification"
+import { CourseCrest } from "@/components/academic/course-crest"
+import type { AcademicSummary, PresenceStatus } from "@/types"
 
 type ProfilePayload = {
   user: {
@@ -24,8 +26,11 @@ type ProfilePayload = {
     username: string | null
     displayId: string
     image: string | null
+    bannerHref: string | null
     online: boolean
+    presenceStatus: PresenceStatus
     lastSeenAt: string | null
+    academic: AcademicSummary | null
   }
   gamification: {
     xp: number
@@ -100,8 +105,20 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
 
         {!isLoading && !error && u && g && (
           <div className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+            <div className="overflow-hidden rounded-lg border">
+              <div className="h-24 bg-muted">
+                {u.bannerHref ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={u.bannerHref}
+                    alt="Banner do perfil"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-linear-to-r from-muted via-muted/70 to-primary/20" />
+                )}
+              </div>
+              <div className="flex flex-col items-center gap-3 p-4 -mt-8 sm:flex-row sm:items-start">
                 <div className="relative shrink-0">
                   {rank.key === "genio" ? (
                     <div className="avatar-rank-genio-wrapper">
@@ -125,7 +142,10 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
                 <div className="text-center sm:text-left flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{u.name}</h3>
                   {u.username && (
-                    <p className="text-sm text-muted-foreground">@{u.username}</p>
+                    <p className="inline-flex items-center justify-center gap-1.5 text-sm text-muted-foreground sm:justify-start">
+                      <CourseCrest academic={u.academic} size="xs" />
+                      @{u.username}
+                    </p>
                   )}
                   <p className="text-[11px] text-muted-foreground/80 font-mono mt-0.5">
                     #{u.displayId.slice(0, 6).toUpperCase()}
@@ -135,6 +155,12 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
                       {rank.icon} {rank.label}
                     </Badge>
                     <span className="text-xs text-muted-foreground">Nível {levelInfo.level}</span>
+                    {u.academic ? (
+                      <Badge variant="outline" className="text-[10px] gap-1">
+                        <CourseCrest academic={u.academic} size="xs" />
+                        {u.academic.courseName}
+                      </Badge>
+                    ) : null}
                     {streakActive && (
                       <span className="flex items-center gap-0.5 text-xs text-orange-500 font-medium">
                         <Flame className="size-3.5" />
@@ -144,7 +170,9 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1.5">
                     {u.online ? (
-                      <span className="text-green-600">Online</span>
+                      <span className="text-green-600">
+                        {u.presenceStatus === "AWAY" ? "Ocioso" : "Online"}
+                      </span>
                     ) : (
                       <span>Offline</span>
                     )}
@@ -154,7 +182,7 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
 
               <Separator className="my-3" />
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 px-4 pb-4">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <Zap className="size-3" /> XP / próximo nível

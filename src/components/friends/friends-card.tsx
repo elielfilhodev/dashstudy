@@ -31,6 +31,8 @@ import {
 import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import { rankFromLevel, levelFromXp } from "@/lib/gamification"
+import { CourseCrest } from "@/components/academic/course-crest"
+import type { AcademicSummary, PresenceStatus } from "@/types"
 
 const FriendProfileDialog = dynamic(
   () => import("@/components/friends/friend-profile-dialog").then((m) => m.FriendProfileDialog),
@@ -44,7 +46,9 @@ interface FriendUser {
   displayId: string
   image: string | null
   online: boolean
+  presenceStatus: PresenceStatus
   lastSeenAt: string | null
+  academic: AcademicSummary | null
   xp: number
   friendshipId: string
   direction: "sent" | "received"
@@ -118,10 +122,18 @@ function FriendCard({
           </Badge>
         </div>
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          {friend.username && <span>@{friend.username}</span>}
+          {friend.username && (
+            <span className="inline-flex items-center gap-1">
+              <CourseCrest academic={friend.academic} size="xs" />
+              @{friend.username}
+            </span>
+          )}
           <span className="flex items-center gap-0.5">
             {friend.online ? (
-              <><CircleDot className="size-2.5 text-green-500" /> Online</>
+              <>
+                <CircleDot className="size-2.5 text-green-500" />
+                {friend.presenceStatus === "AWAY" ? "Ocioso" : "Online"}
+              </>
             ) : (
               <><Clock className="size-2.5" /> Offline</>
             )}
@@ -186,7 +198,12 @@ function PendingCard({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{user.name}</p>
         <p className="text-[11px] text-muted-foreground">
-          {user.username ? `@${user.username}` : user.displayId}
+          {user.username ? (
+            <span className="inline-flex items-center gap-1">
+              <CourseCrest academic={user.academic} size="xs" />
+              @{user.username}
+            </span>
+          ) : user.displayId}
           {type === "sent" && " · Aguardando"}
         </p>
       </div>

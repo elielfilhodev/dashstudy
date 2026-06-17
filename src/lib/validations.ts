@@ -1,4 +1,8 @@
 import { z } from "zod"
+import { ACADEMIC_LEVEL_VALUES } from "@/lib/academic"
+
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+const timeRegex = /^\d{2}:\d{2}$/
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -20,6 +24,12 @@ export const registerSchema = z
     email: z.string().email("E-mail inválido"),
     password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
     confirmPassword: z.string(),
+    academicLevel: z.enum(ACADEMIC_LEVEL_VALUES, {
+      error: "Nível acadêmico inválido",
+    }),
+    courseName: z.string().min(2, "Informe o nome do curso").max(120),
+    startDate: z.string().regex(dateRegex, "Data de início inválida (YYYY-MM-DD)"),
+    currentSemester: z.coerce.number().int().min(1, "Semestre inválido").max(30, "Semestre inválido"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não conferem",
@@ -48,9 +58,6 @@ export type CreateSubjectInput = z.infer<typeof createSubjectSchema>
 // ---------------------------------------------------------------------------
 // Agenda
 // ---------------------------------------------------------------------------
-
-const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-const timeRegex = /^\d{2}:\d{2}$/
 
 export const createAgendaItemSchema = z.object({
   title: z.string().min(1).max(200),
@@ -174,6 +181,16 @@ export const updateAvatarSchema = z.object({
   image: z.string().url("URL de imagem inválida").max(2048),
 })
 
+export const updateAcademicProfileSchema = z.object({
+  action: z.literal("academic-profile"),
+  academicLevel: z.enum(ACADEMIC_LEVEL_VALUES, {
+    error: "Nível acadêmico inválido",
+  }),
+  courseName: z.string().min(2, "Informe o nome do curso").max(120),
+  startDate: z.string().regex(dateRegex, "Data de início inválida (YYYY-MM-DD)"),
+  currentSemester: z.coerce.number().int().min(1, "Semestre inválido").max(30, "Semestre inválido"),
+})
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Senha atual é obrigatória"),
@@ -202,6 +219,7 @@ export const resetPasswordSchema = z
 
 export type UpdateUsernameInput = z.infer<typeof updateUsernameSchema>
 export type UpdateAvatarInput = z.infer<typeof updateAvatarSchema>
+export type UpdateAcademicProfileInput = z.infer<typeof updateAcademicProfileSchema>
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

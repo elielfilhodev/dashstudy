@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { SettingsView } from "@/components/settings/settings-view"
 import { redirect } from "next/navigation"
+import { serializeAcademicProfile } from "@/lib/academic"
 
 export const metadata = { title: "Configurações — Dash Estudos" }
 
@@ -13,7 +14,12 @@ export default async function ConfiguracoesPage() {
 
   const userRecord = await db.user.findUnique({
     where: { id: userId },
-    select: { username: true, image: true, provider: true },
+    select: {
+      username: true,
+      image: true,
+      provider: true,
+      academicProfile: { include: { course: true } },
+    },
   })
 
   return (
@@ -24,6 +30,7 @@ export default async function ConfiguracoesPage() {
         image: userRecord?.image ?? session.user.image ?? null,
         username: userRecord?.username ?? null,
         provider: userRecord?.provider ?? "email",
+        academic: serializeAcademicProfile(userRecord?.academicProfile),
       }}
     />
   )

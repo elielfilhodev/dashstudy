@@ -36,9 +36,12 @@ model User {
 
   // Presence
   lastSeenAt    DateTime?
+  presenceStatus PresenceStatus @default(OFFLINE)
+  presenceUpdatedAt DateTime?
 
   accounts      Account[]
   sessions      Session[]
+  academicProfile AcademicProfile?
 
   subjects      Subject[]
   agendaItems   AgendaItem[]
@@ -60,6 +63,7 @@ model User {
   groupMemberships  ChatGroupMember[]
   sentMessages      Message[]         @relation("MessageSender")
   receivedMessages  Message[]         @relation("MessageRecipient")
+  messageReadReceipts MessageReadReceipt[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -101,9 +105,55 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum AcademicLevel {
+  GRADUACAO
+  MESTRADO
+  DOUTORADO
+  TECNOLOGO
+}
+
+enum PresenceStatus {
+  ONLINE
+  AWAY
+  OFFLINE
+}
+
 // ---------------------------------------------------------------------------
 // App domain tables
 // ---------------------------------------------------------------------------
+
+model Course {
+  id              String @id @default(cuid())
+  name            String
+  normalizedName  String @unique
+  slug            String @unique
+  crestIcon       String @default("graduation-cap")
+  crestColor      String @default("#0f766e")
+  crestBackground String @default("#ecfeff")
+
+  academicProfiles AcademicProfile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AcademicProfile {
+  id              String @id @default(cuid())
+  userId          String @unique
+  courseId        String
+  academicLevel   AcademicLevel
+  startDate       DateTime
+  currentSemester Int
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@index([academicLevel])
+}
 
 model Subject {
   id        String  @id @default(cuid())
@@ -344,10 +394,24 @@ model Message {
   sender    User       @relation("MessageSender",    fields: [senderId],    references: [id])
   recipient User?      @relation("MessageRecipient", fields: [recipientId], references: [id])
   group     ChatGroup? @relation(fields: [groupId],  references: [id], onDelete: Cascade)
+  readReceipts MessageReadReceipt[]
 
   createdAt DateTime @default(now())
 
   @@index([senderId])
   @@index([recipientId])
   @@index([groupId])
+}
+
+model MessageReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
 }

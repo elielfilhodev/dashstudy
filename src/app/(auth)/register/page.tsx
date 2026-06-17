@@ -17,6 +17,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ACADEMIC_LEVEL_LABELS, type AcademicLevel } from "@/lib/academic"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -26,6 +34,10 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    academicLevel: "GRADUACAO" as AcademicLevel,
+    courseName: "",
+    startDate: "",
+    currentSemester: "1",
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -89,7 +101,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm shadow-lg">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">Criar conta</CardTitle>
           <CardDescription>Comece a controlar seus estudos hoje</CardDescription>
@@ -167,6 +179,67 @@ export default function RegisterPage() {
                 required
                 autoComplete="email"
               />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="academic-level">Nível acadêmico</Label>
+                <Select
+                  value={form.academicLevel}
+                  onValueChange={(value) =>
+                    setForm((prev) => ({ ...prev, academicLevel: value as AcademicLevel }))
+                  }
+                >
+                  <SelectTrigger id="academic-level" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ACADEMIC_LEVEL_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="course-name">Curso</Label>
+                <Input
+                  id="course-name"
+                  placeholder="Ex: Engenharia de Software"
+                  value={form.courseName}
+                  onChange={update("courseName")}
+                  required
+                  minLength={2}
+                  maxLength={120}
+                  autoComplete="organization-title"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="start-date">Início</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={form.startDate}
+                  onChange={update("startDate")}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="current-semester">Semestre atual</Label>
+                <Input
+                  id="current-semester"
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={form.currentSemester}
+                  onChange={update("currentSemester")}
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-1">

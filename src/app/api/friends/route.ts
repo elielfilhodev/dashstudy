@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { requireAuth } from "@/lib/session"
 import { ok, badRequest, serverError } from "@/lib/api-response"
 import { z } from "zod"
+import { serializeAcademicProfile } from "@/lib/academic"
 
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
 
@@ -18,6 +19,8 @@ function serializeFriend(user: {
   displayId: string
   image: string | null
   lastSeenAt: Date | null
+  presenceStatus: "ONLINE" | "AWAY" | "OFFLINE"
+  academicProfile: Parameters<typeof serializeAcademicProfile>[0]
   gamification: { xp: number } | null
 }) {
   return {
@@ -27,7 +30,9 @@ function serializeFriend(user: {
     displayId: user.displayId,
     image: user.image,
     online: isOnline(user.lastSeenAt),
+    presenceStatus: isOnline(user.lastSeenAt) ? user.presenceStatus : "OFFLINE",
     lastSeenAt: user.lastSeenAt?.toISOString() ?? null,
+    academic: serializeAcademicProfile(user.academicProfile),
     xp: user.gamification?.xp ?? 0,
   }
 }
@@ -39,6 +44,8 @@ const friendUserSelect = {
   displayId: true,
   image: true,
   lastSeenAt: true,
+  presenceStatus: true,
+  academicProfile: { include: { course: true } },
   gamification: { select: { xp: true } },
 } as const
 

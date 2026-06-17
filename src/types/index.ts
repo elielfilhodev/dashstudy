@@ -93,6 +93,26 @@ export type RankInfo = {
 }
 
 // ---------------------------------------------------------------------------
+// Academic identity
+// ---------------------------------------------------------------------------
+
+export type AcademicLevel = "GRADUACAO" | "MESTRADO" | "DOUTORADO" | "TECNOLOGO"
+
+export type AcademicSummary = {
+  academicLevel: AcademicLevel
+  levelLabel: string
+  courseName: string
+  courseSlug: string
+  crestIcon: string
+  crestColor: string
+  crestBackground: string
+  startDate: string
+  currentSemester: number
+}
+
+export type PresenceStatus = "ONLINE" | "AWAY" | "OFFLINE"
+
+// ---------------------------------------------------------------------------
 // View routing
 // ---------------------------------------------------------------------------
 
@@ -144,6 +164,8 @@ export type ChatUser = {
   displayId: string
   image: string | null
   online?: boolean
+  presenceStatus?: PresenceStatus
+  academic?: AcademicSummary | null
 }
 
 export type ChatGroup = {
@@ -180,6 +202,7 @@ export type ChatMessage = {
   attachmentType: MessageAttachmentType | null
   attachmentName: string | null
   createdAt: string
+  readReceipts?: { userId: string; readAt: string }[]
 }
 
 export type Conversation =

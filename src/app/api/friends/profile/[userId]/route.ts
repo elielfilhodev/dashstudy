@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { requireAuth } from "@/lib/session"
 import { forbidden, notFound, ok, serverError } from "@/lib/api-response"
+import { serializeAcademicProfile } from "@/lib/academic"
 
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000
 
@@ -49,7 +50,12 @@ export async function GET(
         username: true,
         displayId: true,
         image: true,
+        bannerUrl: true,
+        bannerBlob: true,
         lastSeenAt: true,
+        presenceStatus: true,
+        presenceUpdatedAt: true,
+        academicProfile: { include: { course: true } },
         gamification: {
           select: {
             xp: true,
@@ -78,8 +84,13 @@ export async function GET(
         username: user.username,
         displayId: user.displayId,
         image: user.image,
+        bannerHref: user.bannerBlob
+          ? `/api/friends/profile/${user.id}/banner`
+          : user.bannerUrl,
         online: isOnline(user.lastSeenAt),
+        presenceStatus: isOnline(user.lastSeenAt) ? user.presenceStatus : "OFFLINE",
         lastSeenAt: user.lastSeenAt?.toISOString() ?? null,
+        academic: serializeAcademicProfile(user.academicProfile),
       },
       gamification: g
         ? {

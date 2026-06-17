@@ -23,7 +23,8 @@ import { cn } from "@/lib/utils"
 import { levelFromXp, rankFromLevel, ACHIEVEMENTS, RANK_THRESHOLDS } from "@/lib/gamification"
 import { FriendsCard } from "@/components/friends/friends-card"
 import { ActivityHeatmap } from "@/components/profile/activity-heatmap"
-import type { Achievement, Gamification } from "@/types"
+import { CourseCrest } from "@/components/academic/course-crest"
+import type { AcademicSummary, Achievement, Gamification } from "@/types"
 
 interface Props {
   user: {
@@ -33,6 +34,7 @@ interface Props {
     username: string | null
     displayId: string
     bannerHref: string | null
+    academic: AcademicSummary | null
   }
   gamification: Gamification | null
 }
@@ -206,7 +208,10 @@ export function ProfileView({ user, gamification }: Props) {
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold">{user.name}</h2>
                 {user.username && (
-                  <span className="text-sm text-muted-foreground">@{user.username}</span>
+                  <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <CourseCrest academic={user.academic} size="xs" />
+                    @{user.username}
+                  </span>
                 )}
                 {streakActive && (
                   <div className="flex items-center gap-1 text-orange-500 text-sm font-medium">
@@ -223,6 +228,12 @@ export function ProfileView({ user, gamification }: Props) {
                   {rank.icon} {rank.label}
                 </Badge>
                 <span className="text-sm text-muted-foreground">Nível {levelInfo.level}</span>
+                {user.academic ? (
+                  <Badge variant="outline" className="text-xs gap-1.5">
+                    <CourseCrest academic={user.academic} size="xs" />
+                    {user.academic.courseName} · {user.academic.currentSemester}º sem.
+                  </Badge>
+                ) : null}
               </div>
             </div>
           </div>

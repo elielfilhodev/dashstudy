@@ -3,7 +3,18 @@
 import { useState, useRef } from "react"
 import { signOut, useSession } from "next-auth/react"
 import { toast } from "sonner"
-import { Eye, EyeOff, Camera, AtSign, Lock, KeyRound, Loader2, CheckCircle2, LogOut } from "lucide-react"
+import {
+  Eye,
+  EyeOff,
+  Camera,
+  AtSign,
+  Lock,
+  KeyRound,
+  Loader2,
+  CheckCircle2,
+  LogOut,
+  GraduationCap,
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +22,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { CourseCrest } from "@/components/academic/course-crest"
+import { ACADEMIC_LEVEL_LABELS, type AcademicLevel } from "@/lib/academic"
+import type { AcademicSummary } from "@/types"
 
 interface Props {
   user: {
@@ -19,6 +40,7 @@ interface Props {
     image: string | null
     username: string | null
     provider: string
+    academic: AcademicSummary | null
   }
 }
 
@@ -34,6 +56,16 @@ export function SettingsView({ user }: Props) {
   const [avatarUrl, setAvatarUrl] = useState(user.image ?? "")
   const [avatarPreview, setAvatarPreview] = useState(user.image ?? "")
   const [avatarLoading, setAvatarLoading] = useState(false)
+
+  // --- Academic profile ---
+  const [academic, setAcademic] = useState(user.academic)
+  const [academicForm, setAcademicForm] = useState({
+    academicLevel: (user.academic?.academicLevel ?? "GRADUACAO") as AcademicLevel,
+    courseName: user.academic?.courseName ?? "",
+    startDate: user.academic?.startDate ? user.academic.startDate.slice(0, 10) : "",
+    currentSemester: String(user.academic?.currentSemester ?? 1),
+  })
+  const [academicLoading, setAcademicLoading] = useState(false)
 
   // --- Change password ---
   const [currentPassword, setCurrentPassword] = useState("")
@@ -138,6 +170,32 @@ export function SettingsView({ user }: Props) {
       toast.error("Erro de conexão")
     } finally {
       setPasswordLoading(false)
+    }
+  }
+
+  async function handleAcademicSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setAcademicLoading(true)
+    try {
+      const res = await fetch("/api/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "academic-profile",
+          ...academicForm,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json.error ?? "Erro ao atualizar dados acadêmicos")
+        return
+      }
+      setAcademic(json.data as AcademicSummary)
+      toast.success("Dados acadêmicos atualizados")
+    } catch {
+      toast.error("Erro de conexão")
+    } finally {
+      setAcademicLoading(false)
     }
   }
 
@@ -285,6 +343,108 @@ export function SettingsView({ user }: Props) {
                     <Loader2 className="size-4 animate-spin mr-2" />
                   ) : null}
                   Salvar username
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Academic profile */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <GraduationCap className="size-4" /> Dados acadêmicos
+              </CardTitle>
+              <CardDescription>
+                O brasão do curso aparece junto ao seu username em áreas sociais.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {academic ? (
+                <div className="mb-4 flex items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <CourseCrest academic={academic} size="md" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{academic.courseName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {academic.levelLabel} · {academic.currentSemester}º semestre
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              <form onSubmit={handleAcademicSubmit} className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="settings-academic-level">Nível acadêmico</Label>
+                    <Select
+                      value={academicForm.academicLevel}
+                      onValueChange={(value) =>
+                        setAcademicForm((prev) => ({ ...prev, academicLevel: value as AcademicLevel }))
+                      }
+                    >
+                      <SelectTrigger id="settings-academic-level" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(ACADEMIC_LEVEL_LABELS).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="settings-current-semester">Semestre atual</Label>
+                    <Input
+                      id="settings-current-semester"
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={academicForm.currentSemester}
+                      onChange={(e) =>
+                        setAcademicForm((prev) => ({ ...prev, currentSemester: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="settings-course-name">Curso</Label>
+                  <Input
+                    id="settings-course-name"
+                    value={academicForm.courseName}
+                    onChange={(e) =>
+                      setAcademicForm((prev) => ({ ...prev, courseName: e.target.value }))
+                    }
+                    minLength={2}
+                    maxLength={120}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="settings-start-date">Data de início</Label>
+                  <Input
+                    id="settings-start-date"
+                    type="date"
+                    value={academicForm.startDate}
+                    onChange={(e) =>
+                      setAcademicForm((prev) => ({ ...prev, startDate: e.target.value }))
+                    }
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    academicLoading ||
+                    !academicForm.courseName.trim() ||
+                    !academicForm.startDate ||
+                    !academicForm.currentSemester
+                  }
+                >
+                  {academicLoading ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+                  Salvar dados acadêmicos
                 </Button>
               </form>
             </CardContent>

@@ -2,8 +2,9 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
 import { requireAuth } from "@/lib/session"
-import { updateUsernameSchema, updateAvatarSchema } from "@/lib/validations"
+import { updateUsernameSchema, updateAvatarSchema, updateAcademicProfileSchema } from "@/lib/validations"
 import { ok, badRequest, serverError } from "@/lib/api-response"
+import { courseDefaults, serializeAcademicProfile } from "@/lib/academic"
 
 const updateBannerUrlSchema = z.object({
   action: z.literal("banner-url"),
@@ -73,7 +74,50 @@ export async function PATCH(request: NextRequest) {
       return ok({ bannerUrl: parsed.data.bannerUrl })
     }
 
-    return badRequest("Ação inválida. Use action: 'username', 'avatar' ou 'banner-url'")
+    if (action === "academic-profile") {
+      const parsed = updateAcademicProfileSchema.safeParse(body)
+      if (!parsed.success) {
+        return badRequest(parsed.error.issues[0]?.message ?? "Dados inválidos")
+      }
+
+      const { courseName, academicLevel, startDate, currentSemester } = parsed.data
+      const courseData = courseDefaults(courseName)
+
+      const academicProfile = await db.$transaction(async (tx) => {
+        const course = await tx.course.upsert({
+          where: { normalizedName: courseData.normalizedName },
+          update: {
+            name: courseData.name,
+            crestIcon: courseData.crestIcon,
+            crestColor: courseData.crestColor,
+            crestBackground: courseData.crestBackground,
+          },
+          create: courseData,
+        })
+
+        return tx.academicProfile.upsert({
+          where: { userId },
+          update: {
+            courseId: course.id,
+            academicLevel,
+            startDate: new Date(`${startDate}T00:00:00.000Z`),
+            currentSemester,
+          },
+          create: {
+            userId,
+            courseId: course.id,
+            academicLevel,
+            startDate: new Date(`${startDate}T00:00:00.000Z`),
+            currentSemester,
+          },
+          include: { course: true },
+        })
+      })
+
+      return ok(serializeAcademicProfile(academicProfile))
+    }
+
+    return badRequest("Ação inválida. Use action: 'username', 'avatar', 'banner-url' ou 'academic-profile'")
   } catch (err) {
     return serverError(err)
   }
