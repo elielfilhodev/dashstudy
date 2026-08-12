@@ -61,6 +61,19 @@ jobs:
       - name: Gerar Prisma Client
         run: npm run prisma:generate
 
+      # Aplica as migrations num banco vazio e compara o resultado com o
+      # schema. Pega migration faltando ou schema alterado sem migration —
+      # divergência que só apareceria num banco novo, nunca no de quem já
+      # rodou `db push`.
+      - name: Verificar migrations x schema
+        run: |
+          psql "postgresql://test:test@localhost:5432/postgres" -c "CREATE DATABASE shadow"
+          npx prisma migrate diff \
+            --from-migrations ./prisma/migrations \
+            --to-schema-datamodel ./prisma/schema.prisma \
+            --shadow-database-url postgresql://test:test@localhost:5432/shadow?schema=public \
+            --exit-code
+
       - name: Aplicar migrations
         run: npm run prisma:deploy
 
