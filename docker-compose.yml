@@ -1,0 +1,66 @@
+# Stack base. Sozinho, sobe o ambiente de desenvolvimento porque o Compose
+# aplica docker-compose.override.yml automaticamente.
+#   dev  : docker compose up
+#   prod : docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dashstudy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dashstudy}
+      POSTGRES_DB: ${POSTGRES_DB:-dashstudy}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-dashstudy} -d ${POSTGRES_DB:-dashstudy}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dashstudy}:${POSTGRES_PASSWORD:-dashstudy}@db:5432/${POSTGRES_DB:-dashstudy}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_MINUTES: ${JWT_ACCESS_MINUTES:-15}
+      JWT_REFRESH_DAYS: ${JWT_REFRESH_DAYS:-7}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
+      AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-20}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL:-}
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+      TENOR_API_KEY: ${TENOR_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '${BACKEND_PORT:-4000}:4000'
+
+  frontend:
+    build:
+      context: .
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      BACKEND_URL: http://backend:4000
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    depends_on:
+      - backend
+    ports:
+      - '${FRONTEND_PORT:-3000}:3000'
+
+volumes:
+  db-data:

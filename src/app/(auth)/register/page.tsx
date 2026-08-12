@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
+import { signIn } from "@/lib/session-client"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Github, Loader2 } from "lucide-react"
@@ -77,18 +77,9 @@ export default function RegisterPage() {
         return
       }
 
-      const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        router.push("/login")
-      } else {
-        router.push("/")
-        router.refresh()
-      }
+      // A rota de registro já devolve a sessão pronta em cookie.
+      router.push("/")
+      router.refresh()
     } finally {
       setLoading(false)
     }

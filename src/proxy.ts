@@ -1,29 +1,30 @@
-import { auth } from "@/lib/auth"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/auth-cookies"
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl
-  const isLoggedIn = !!req.auth
+const AUTH_ROUTES = ["/login", "/register", "/reset-password", "/forgot-password"]
 
-  const authRoutes = ["/login", "/register", "/reset-password"]
-  const isAuthRoute = authRoutes.includes(pathname)
+export default function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/", req.url))
-    }
-    return NextResponse.next()
+  // Presença do cookie basta aqui; a validade do token é conferida pela API.
+  const hasSession =
+    request.cookies.has(ACCESS_COOKIE) || request.cookies.has(REFRESH_COOKIE)
+
+  if (AUTH_ROUTES.includes(pathname)) {
+    return hasSession
+      ? NextResponse.redirect(new URL("/", request.url))
+      : NextResponse.next()
   }
 
-  if (!isLoggedIn && !pathname.startsWith("/api/auth")) {
-    return NextResponse.redirect(new URL("/login", req.url))
+  if (!hasSession) {
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

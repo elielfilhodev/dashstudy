@@ -1,0 +1,12 @@
+node_modules
+.next
+backend
+.git
+.env
+.env.*
+!.env.example
+*.log
+coverage
+.vercel
+.claude
+.cursor

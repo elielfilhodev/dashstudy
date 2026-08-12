@@ -1,46 +1,21 @@
-import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
 import { ProfileView } from "@/components/profile/profile-view"
-import { redirect } from "next/navigation"
-import { serializeAcademicProfile } from "@/lib/academic"
+import { fetchFromApi, requireUser } from "@/lib/session"
+import type { AcademicSummary, Gamification } from "@/types"
 
 export default async function PerfilPage() {
-  const session = await auth()
-  if (!session?.user?.id) redirect("/login")
-
-  const userId = session.user.id
-
-  const [gamification, userRecord] = await Promise.all([
-    db.gamification.findUnique({
-      where: { userId },
-      include: { achievements: { orderBy: { unlockedAt: "desc" } } },
-    }),
-    db.user.findUnique({
-      where: { id: userId },
-      select: {
-        username: true,
-        displayId: true,
-        bannerUrl: true,
-        bannerBlob: true,
-        academicProfile: { include: { course: true } },
-      },
-    }),
-  ])
-
-  const bannerHref = userRecord?.bannerBlob
-    ? `/api/user/banner`
-    : userRecord?.bannerUrl ?? null
+  const user = await requireUser()
+  const gamification = await fetchFromApi<Gamification>("/gamification")
 
   return (
     <ProfileView
       user={{
-        name: session.user.name ?? "Usuário",
-        email: session.user.email ?? "",
-        image: session.user.image ?? null,
-        username: userRecord?.username ?? null,
-        displayId: userRecord?.displayId ?? userId.slice(0, 6).toUpperCase(),
-        bannerHref,
-        academic: serializeAcademicProfile(userRecord?.academicProfile),
+        name: user.name ?? "Usuário",
+        email: user.email,
+        image: user.image,
+        username: user.username,
+        displayId: user.displayId,
+        bannerHref: user.bannerHref,
+        academic: user.academic as AcademicSummary | null,
       }}
       gamification={gamification}
     />

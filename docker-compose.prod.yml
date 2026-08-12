@@ -1,0 +1,28 @@
+# Ambiente de produção. Precisa ser passado explicitamente para neutralizar o
+# override de desenvolvimento:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  db:
+    restart: unless-stopped
+    # Sem porta publicada: o banco só é alcançável pela rede interna do Compose.
+
+  backend:
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  frontend:
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      COOKIE_SECURE: 'true'
+    deploy:
+      resources:
+        limits:
+          memory: 512M

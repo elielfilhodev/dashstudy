@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
+import { signIn } from "@/lib/session-client"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Github, Loader2 } from "lucide-react"
@@ -31,13 +31,9 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
-      if (result?.error) {
-        setError("E-mail ou senha inválidos")
+      const result = await signIn("credentials", { email, password })
+      if (result.error) {
+        setError(result.error)
       } else {
         router.push("/")
         router.refresh()

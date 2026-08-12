@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/layout/theme-provider"
-import { SessionProvider } from "@/components/layout/session-provider"
 import { SWRProvider } from "@/components/layout/swr-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { StudyAlerts } from "@/components/layout/study-alerts"
@@ -34,15 +33,13 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <SessionProvider>
-          <SWRProvider>
-            <ThemeProvider>
-              {children}
-              <Toaster />
-              <StudyAlerts />
-            </ThemeProvider>
-          </SWRProvider>
-        </SessionProvider>
+        <SWRProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster />
+            <StudyAlerts />
+          </ThemeProvider>
+        </SWRProvider>
       </body>
     </html>
   )

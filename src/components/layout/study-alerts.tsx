@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useSession } from "@/lib/session-client"
 import useSWR from "swr"
 import { toast } from "sonner"
 import { AlertTriangle, CalendarClock, CalendarDays, ListTodo } from "lucide-react"

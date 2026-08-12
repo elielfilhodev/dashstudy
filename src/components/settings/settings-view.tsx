@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { signOut, useSession } from "next-auth/react"
+import { signOut, useSession } from "@/lib/session-client"
 import { toast } from "sonner"
 import {
   Eye,

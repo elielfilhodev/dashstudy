@@ -1,0 +1,29 @@
+# Ambiente de desenvolvimento — aplicado automaticamente por `docker compose up`.
+# Código montado por bind mount, hot-reload ligado e Postgres exposto na máquina.
+
+services:
+  db:
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+
+  backend:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+    command: sh -c "npx prisma migrate deploy && npm run start:dev"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/test:/app/test
+
+  frontend:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+    command: npm run dev
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./next.config.ts:/app/next.config.ts

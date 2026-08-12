@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
 
+  // Imagem Docker enxuta: empacota só o necessário para rodar o servidor.
+  output: "standalone",
+
   images: {
     remotePatterns: [
       {
@@ -15,7 +18,6 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
 
-  serverExternalPackages: ["@prisma/client", "bcryptjs"],
 
   // Melhora drasticamente a performance de tempo de carregamento no front-end
   // isolando os imports da biblioteca de ícones e outras bibliotecas pesadas modulares

@@ -1,93 +1,24 @@
-import { NextRequest } from "next/server"
-import bcrypt from "bcryptjs"
-import { db } from "@/lib/db"
-import { registerSchema } from "@/lib/validations"
-import { created, badRequest, serverError } from "@/lib/api-response"
-import { courseDefaults } from "@/lib/academic"
+import { NextRequest, NextResponse } from "next/server"
+import { setSessionCookies, type TokenPair } from "@/lib/auth-cookies"
+import { ApiError, apiPostPublic } from "@/lib/backend"
 
-function generateDisplayId(): string {
-  // Short 6-char alphanumeric ID displayed as #XXXXXX
-  return Math.random().toString(36).slice(2, 8).toUpperCase()
-}
-
+/** Registra e já autentica, evitando um segundo round-trip do cliente. */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const parsed = registerSchema.safeParse(body)
+    const user = await apiPostPublic<{ id: string }>("/auth/register", body)
 
-    if (!parsed.success) {
-      return badRequest(parsed.error.issues[0]?.message ?? "Dados inválidos")
-    }
-
-    const {
-      name,
-      username,
-      email,
-      password,
-      academicLevel,
-      courseName,
-      startDate,
-      currentSemester,
-    } = parsed.data
-
-    const [existingEmail, existingUsername] = await Promise.all([
-      db.user.findUnique({ where: { email } }),
-      db.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } } }),
-    ])
-
-    if (existingEmail) return badRequest("Já existe uma conta com este e-mail")
-    if (existingUsername) return badRequest("Este username já está em uso")
-
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // Ensure unique displayId
-    let displayId = generateDisplayId()
-    let attempts = 0
-    while (attempts < 10) {
-      const collision = await db.user.findUnique({ where: { displayId } })
-      if (!collision) break
-      displayId = generateDisplayId()
-      attempts++
-    }
-
-    const courseData = courseDefaults(courseName)
-
-    const user = await db.$transaction(async (tx) => {
-      const course = await tx.course.upsert({
-        where: { normalizedName: courseData.normalizedName },
-        update: {
-          name: courseData.name,
-          crestIcon: courseData.crestIcon,
-          crestColor: courseData.crestColor,
-          crestBackground: courseData.crestBackground,
-        },
-        create: courseData,
-      })
-
-      return tx.user.create({
-        data: {
-          name,
-          username: username.toLowerCase(),
-          displayId,
-          email,
-          password: hashedPassword,
-          provider: "email",
-          gamification: { create: {} },
-          academicProfile: {
-            create: {
-              academicLevel,
-              startDate: new Date(`${startDate}T00:00:00.000Z`),
-              currentSemester,
-              courseId: course.id,
-            },
-          },
-        },
-        select: { id: true, name: true, username: true, displayId: true, email: true, createdAt: true },
-      })
+    const tokens = await apiPostPublic<TokenPair>("/auth/login", {
+      email: body.email,
+      password: body.password,
     })
+    await setSessionCookies(tokens)
 
-    return created(user)
+    return NextResponse.json({ data: user }, { status: 201 })
   } catch (err) {
-    return serverError(err)
+    if (err instanceof ApiError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
+    return NextResponse.json({ error: "Erro ao criar a conta" }, { status: 500 })
   }
 }

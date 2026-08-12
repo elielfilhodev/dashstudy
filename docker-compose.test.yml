@@ -1,0 +1,21 @@
+# Postgres efêmero para a suíte de testes do backend.
+#   docker compose -f docker-compose.test.yml up -d
+#   cd backend && npm run test:e2e
+# Roda em tmpfs e numa porta separada para não tocar no banco de desenvolvimento.
+
+services:
+  test-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: dashstudy_test
+    ports:
+      - '55432:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U test -d dashstudy_test']
+      interval: 3s
+      timeout: 3s
+      retries: 20
