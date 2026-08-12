@@ -1,11 +1,12 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { json, urlencoded } from 'express';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/bootstrap';
+import { ENV, type Env } from '../src/common/config/env';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 
 export type E2EContext = {
-  app: INestApplication;
+  app: NestExpressApplication;
   prisma: PrismaService;
 };
 
@@ -14,11 +15,11 @@ export async function bootstrapTestApp(): Promise<E2EContext> {
     imports: [AppModule],
   }).compile();
 
-  const app = moduleRef.createNestApplication();
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
-  app.use(json({ limit: 1_048_576 }));
-  app.use(urlencoded({ extended: true, limit: 1_048_576 }));
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  const app = moduleRef.createNestApplication<NestExpressApplication>();
+
+  // Mesma configuração do servidor real — sem isso a suíte testaria um
+  // pipeline HTTP diferente do que roda em produção.
+  configureApp(app, app.get<Env>(ENV));
 
   await app.init();
 
