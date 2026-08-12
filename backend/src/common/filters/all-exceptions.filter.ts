@@ -38,17 +38,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: message });
   }
 
+  /**
+   * `new BadRequestException('texto')` vira
+   * `{ message: 'texto', error: 'Bad Request', statusCode: 400 }`, ou seja:
+   * `message` guarda a mensagem real e `error` só o nome genérico do status.
+   * Por isso `message` vem primeiro — invertida, a ordem descarta a mensagem.
+   */
   private messageOf(exception: HttpException): string {
     const body = exception.getResponse();
     if (typeof body === 'string') return body;
 
     const record = body as Record<string, unknown>;
-    if (typeof record.error === 'string' && record.error.length > 0) {
-      return record.error;
+    if (typeof record.message === 'string' && record.message.length > 0) {
+      return record.message;
     }
-    if (typeof record.message === 'string') return record.message;
     if (Array.isArray(record.message) && record.message.length > 0) {
       return String(record.message[0]);
+    }
+    // Só sobra quando a exceção foi lançada com um objeto `{ error }` próprio.
+    if (typeof record.error === 'string' && record.error.length > 0) {
+      return record.error;
     }
     return exception.message;
   }
