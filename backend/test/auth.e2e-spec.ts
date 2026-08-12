@@ -67,13 +67,17 @@ describe('Auth (e2e)', () => {
       expect(res.body.error).toContain('e-mail');
     });
 
-    it('rejeita username duplicado ignorando a caixa', async () => {
+    // O username é sempre gravado em minúsculas (register e OAuth normalizam),
+    // e o schema rejeita maiúsculas na entrada — caso já coberto no it.each
+    // abaixo. Por isso a duplicidade é testada com o mesmo username, que é a
+    // única forma de a requisição chegar na checagem do service.
+    it('rejeita username duplicado', async () => {
       const user = uniqueUser();
       await api().post('/api/v1/auth/register').send(user).expect(201);
 
       const res = await api()
         .post('/api/v1/auth/register')
-        .send({ ...uniqueUser(), username: user.username.toUpperCase() })
+        .send({ ...uniqueUser(), username: user.username })
         .expect(400);
 
       expect(res.body.error).toContain('username');
