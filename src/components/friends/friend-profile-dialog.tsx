@@ -118,8 +118,9 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
                   <div className="h-full w-full bg-linear-to-r from-muted via-muted/70 to-primary/20" />
                 )}
               </div>
-              <div className="flex flex-col items-center gap-3 p-4 -mt-8 sm:flex-row sm:items-start">
-                <div className="relative shrink-0">
+              <div className="flex flex-col items-center gap-3 p-4 sm:flex-row sm:items-start">
+                {/* só o avatar sobe sobre o banner; o texto fica abaixo dele */}
+                <div className="relative shrink-0 -mt-8">
                   {rank.key === "genio" ? (
                     <div className="avatar-rank-genio-wrapper">
                       <div className="avatar-rank-genio-inner">
