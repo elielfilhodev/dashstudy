@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import useSWR, { mutate as globalMutate } from "swr"
+import { useRouter } from "next/navigation"
 import {
   UserPlus,
   UserMinus,
@@ -15,6 +16,7 @@ import {
   Mail,
   Trophy,
   Eye,
+  MessageCircle,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -103,6 +105,7 @@ function FriendCard({
   const levelInfo = levelFromXp(friend.xp)
   const rank = rankFromLevel(levelInfo.level)
   const [removing, setRemoving] = useState(false)
+  const router = useRouter()
 
   async function handleRemove() {
     setRemoving(true)
@@ -140,6 +143,16 @@ function FriendCard({
           </span>
         </div>
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-7 text-muted-foreground hover:text-foreground"
+        type="button"
+        onClick={() => router.push(`/chat?friendId=${friend.id}`)}
+        title="Enviar mensagem"
+      >
+        <MessageCircle className="size-3.5" />
+      </Button>
       <Button
         variant="ghost"
         size="icon"

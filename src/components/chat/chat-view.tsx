@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { MessageCircle } from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
@@ -13,6 +14,10 @@ interface Props {
 }
 
 export function ChatView({ meId }: Props) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const friendId = searchParams.get("friendId")
+
   const { data: conversations = [], mutate: revalidateConvs } = useSWR<Conversation[]>(
     "/api/chat/conversations",
     { refreshInterval: 12_000 }
@@ -31,6 +36,27 @@ export function ChatView({ meId }: Props) {
     setActive(c)
     setSidebarVisible(false)
   }, [])
+
+  // Deep link: /chat?friendId=... vindo do perfil de um amigo.
+  const consumedFriendId = useRef<string | null>(null)
+  useEffect(() => {
+    if (!friendId || consumedFriendId.current === friendId) return
+    const existing = conversations.find(
+      (c): c is Conversation & { type: "direct" } => c.type === "direct" && c.friend.id === friendId
+    )
+    if (existing) {
+      consumedFriendId.current = friendId
+      handleSelect(existing)
+      router.replace("/chat")
+      return
+    }
+    const friend = friends.find((f) => f.id === friendId)
+    if (friend) {
+      consumedFriendId.current = friendId
+      handleSelect({ type: "direct", friend, lastMessage: null, unread: 0 })
+      router.replace("/chat")
+    }
+  }, [friendId, conversations, friends, handleSelect, router])
 
   const handleGroupCreated = useCallback(
     (group: ChatGroup) => {

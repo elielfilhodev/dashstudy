@@ -1,7 +1,8 @@
 "use client"
 
 import useSWR from "swr"
-import { Eye, Flame, Loader2, Lock, Medal, Zap } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Eye, Flame, Loader2, Lock, MessageCircle, Medal, Zap } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -57,6 +58,7 @@ type Props = {
 }
 
 export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props) {
+  const router = useRouter()
   const key = open && friendUserId ? `/api/friends/profile/${friendUserId}` : null
   const { data, error, isLoading } = useSWR<ProfilePayload>(key, fetchProfile, {
     revalidateOnFocus: false,
@@ -118,7 +120,7 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
                   <div className="h-full w-full bg-linear-to-r from-muted via-muted/70 to-primary/20" />
                 )}
               </div>
-              <div className="flex flex-col items-center gap-3 p-4 -mt-8 sm:flex-row sm:items-start">
+              <div className="flex flex-col items-center gap-3 p-4 sm:flex-row sm:items-start">
                 <div className="relative shrink-0">
                   {rank.key === "genio" ? (
                     <div className="avatar-rank-genio-wrapper">
@@ -239,9 +241,21 @@ export function FriendProfileDialog({ friendUserId, open, onOpenChange }: Props)
               </div>
             )}
 
-            <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
-              Fechar
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push(`/chat?friendId=${friendUserId}`)
+                }}
+              >
+                <MessageCircle className="size-4" />
+                Enviar mensagem
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+                Fechar
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
