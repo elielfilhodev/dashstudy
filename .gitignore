@@ -43,3 +43,12 @@ next-env.d.ts
 /backend/node_modules
 AGENTS.md
 CLAUDE.md
+
+/backend/.env
+/backend/.env.local
+/backend/.env.development.local
+/backend/.env.test.local
+/backend/.env.production.local
+/backend/.env.development
+/backend/.env.test
+/backend/.env.production

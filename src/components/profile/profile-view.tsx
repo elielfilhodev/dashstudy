@@ -179,9 +179,8 @@ export function ProfileView({ user, gamification }: Props) {
           </button>
         </div>
 
-        <CardContent className="pt-0">
-          {/* Avatar — overlapping the banner */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10 sm:-mt-12 mb-4">
+        <CardContent className="pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-4">
             <div className="relative shrink-0 self-start sm:self-auto">
               {rank.key === "genio" ? (
                 <div className="avatar-rank-genio-wrapper">
