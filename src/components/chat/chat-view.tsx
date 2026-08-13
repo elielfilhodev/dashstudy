@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { MessageCircle } from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
@@ -13,6 +14,10 @@ interface Props {
 }
 
 export function ChatView({ meId }: Props) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const friendId = searchParams.get("friendId")
+
   const { data: conversations = [], mutate: revalidateConvs } = useSWR<Conversation[]>(
     "/api/chat/conversations",
     { refreshInterval: 12_000 }
@@ -22,7 +27,7 @@ export function ChatView({ meId }: Props) {
     "/api/friends",
     { refreshInterval: 0 }
   )
-  const friends: ChatUser[] = friendsData?.friends ?? []
+  const friends = useMemo(() => friendsData?.friends ?? [], [friendsData])
 
   const [active, setActive] = useState<Conversation | null>(null)
   const [sidebarVisible, setSidebarVisible] = useState(true)
@@ -31,6 +36,27 @@ export function ChatView({ meId }: Props) {
     setActive(c)
     setSidebarVisible(false)
   }, [])
+
+  // Deep link: /chat?friendId=... vindo do perfil de um amigo. Resolvido durante a
+  // renderização (não em efeito) para não disparar setState de dentro de um effect.
+  const [handledFriendId, setHandledFriendId] = useState<string | null>(null)
+  if (friendId && friendId !== handledFriendId) {
+    const existing = conversations.find(
+      (c): c is Conversation & { type: "direct" } => c.type === "direct" && c.friend.id === friendId
+    )
+    const friend = friends.find((f) => f.id === friendId)
+    const deepLinkConversation: Conversation | null =
+      existing ?? (friend ? { type: "direct", friend, lastMessage: null, unread: 0 } : null)
+    if (deepLinkConversation) {
+      setHandledFriendId(friendId)
+      setActive(deepLinkConversation)
+      setSidebarVisible(false)
+    }
+  }
+
+  useEffect(() => {
+    if (friendId && handledFriendId === friendId) router.replace("/chat")
+  }, [friendId, handledFriendId, router])
 
   const handleGroupCreated = useCallback(
     (group: ChatGroup) => {
