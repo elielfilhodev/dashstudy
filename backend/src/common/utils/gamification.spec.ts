@@ -1,4 +1,10 @@
-import { dayDiff, levelFromXp, rankFromLevel, utcDayKey } from './gamification';
+import {
+  dayDiff,
+  effectiveStreakDays,
+  levelFromXp,
+  rankFromLevel,
+  utcDayKey,
+} from './gamification';
 
 describe('levelFromXp', () => {
   it('começa no nível 1 sem XP', () => {
@@ -78,5 +84,24 @@ describe('utcDayKey / dayDiff', () => {
   it('atravessa a virada do mês e do ano', () => {
     expect(dayDiff('2026-12-31', '2027-01-01')).toBe(1);
     expect(dayDiff('2026-02-28', '2026-03-01')).toBe(1);
+  });
+});
+
+describe('effectiveStreakDays', () => {
+  it('retorna 0 quando nunca houve conclusão', () => {
+    expect(effectiveStreakDays(0, null, '2026-03-10')).toBe(0);
+  });
+
+  it('mantém a ofensiva quando a última conclusão foi hoje', () => {
+    expect(effectiveStreakDays(5, '2026-03-10', '2026-03-10')).toBe(5);
+  });
+
+  it('mantém a ofensiva quando a última conclusão foi ontem (ainda não quebrou)', () => {
+    expect(effectiveStreakDays(5, '2026-03-09', '2026-03-10')).toBe(5);
+  });
+
+  it('apaga a chama (0) quando passou mais de 1 dia sem conclusão', () => {
+    expect(effectiveStreakDays(5, '2026-03-08', '2026-03-10')).toBe(0);
+    expect(effectiveStreakDays(12, '2026-01-01', '2026-03-10')).toBe(0);
   });
 });

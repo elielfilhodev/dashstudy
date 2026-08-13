@@ -26,7 +26,8 @@ type SessionState = {
 export function useSession(): SessionState {
   const { data, error, isLoading, mutate } = useSWR<ClientSessionUser>("/api/user", {
     shouldRetryOnError: false,
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
+    refreshInterval: 60_000,
   })
 
   const status = isLoading

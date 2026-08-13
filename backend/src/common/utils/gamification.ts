@@ -156,3 +156,20 @@ export function dayDiff(from: string, to: string): number {
   const b = Date.parse(`${to}T00:00:00.000Z`);
   return Math.round((b - a) / 86_400_000);
 }
+
+/**
+ * Ofensiva efetiva para exibição (a "chama"). `streakDays` só é recalculado
+ * quando o usuário conclui uma tarefa, então uma ofensiva perdida fica com o
+ * valor antigo no banco até a próxima conclusão. Aqui derivamos, a cada
+ * leitura, se já se passou mais de 1 dia sem conclusão — se sim, a chama
+ * apaga (mostra 0) mesmo sem gravar nada, preservando `bestStreak` como
+ * recorde.
+ */
+export function effectiveStreakDays(
+  streakDays: number,
+  lastCompletionDate: string | null,
+  today = utcDayKey(),
+): number {
+  if (!lastCompletionDate) return 0;
+  return dayDiff(lastCompletionDate, today) > 1 ? 0 : streakDays;
+}

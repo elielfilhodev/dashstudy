@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { serializeAcademicProfile } from '../../common/utils/academic';
+import { effectiveStreakDays } from '../../common/utils/gamification';
 import {
   isUserOnline,
   serializeBookListItem,
@@ -16,6 +17,7 @@ const emptyGamification = {
   totalCompletions: 0,
   streakDays: 0,
   bestStreak: 0,
+  lastCompletionDate: null as string | null,
   achievements: [] as Array<{ key: string; unlockedAt: string }>,
 };
 
@@ -48,6 +50,7 @@ export class FriendProfileService {
             totalCompletions: true,
             streakDays: true,
             bestStreak: true,
+            lastCompletionDate: true,
             achievements: {
               select: { key: true, unlockedAt: true },
               orderBy: { unlockedAt: 'asc' },
@@ -59,6 +62,8 @@ export class FriendProfileService {
     if (!user) throw new NotFoundException('Utilizador não encontrado');
 
     const online = isUserOnline(user.lastSeenAt);
+    const { lastCompletionDate, ...gamification } =
+      user.gamification ?? emptyGamification;
 
     return {
       user: {
@@ -75,7 +80,13 @@ export class FriendProfileService {
         lastSeenAt: user.lastSeenAt?.toISOString() ?? null,
         academic: serializeAcademicProfile(user.academicProfile),
       },
-      gamification: user.gamification ?? emptyGamification,
+      gamification: {
+        ...gamification,
+        streakDays: effectiveStreakDays(
+          gamification.streakDays,
+          lastCompletionDate,
+        ),
+      },
     };
   }
 

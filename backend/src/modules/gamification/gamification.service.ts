@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import {
   dayDiff,
+  effectiveStreakDays,
   levelFromXp,
   utcDayKey,
   XP_BASE,
@@ -18,7 +19,15 @@ export class GamificationService {
 
   async get(userId: string) {
     const gamification = await this.ensureRow(userId);
-    return { ...gamification, levelInfo: levelFromXp(gamification.xp) };
+    const streakDays = effectiveStreakDays(
+      gamification.streakDays,
+      gamification.lastCompletionDate,
+    );
+    return {
+      ...gamification,
+      streakDays,
+      levelInfo: levelFromXp(gamification.xp),
+    };
   }
 
   /**

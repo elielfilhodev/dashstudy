@@ -268,3 +268,54 @@ describe('GamificationService.completeTask', () => {
     expect(result).toHaveProperty('reward.leveledUp', false);
   });
 });
+
+describe('GamificationService.get', () => {
+  let service: GamificationService;
+  let findUnique: jest.Mock;
+
+  beforeEach(async () => {
+    findUnique = jest.fn();
+    const prisma = {
+      gamification: { findUnique, create: jest.fn() },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        GamificationService,
+        { provide: PrismaService, useValue: prisma },
+      ],
+    }).compile();
+
+    service = moduleRef.get(GamificationService);
+  });
+
+  it('apaga a chama (streakDays 0) quando a ofensiva foi perdida, sem tocar no recorde', async () => {
+    findUnique.mockResolvedValue(
+      row({ streakDays: 5, bestStreak: 5, lastCompletionDate: daysAgo(3) }),
+    );
+
+    const result = await service.get('user1');
+
+    expect(result).toMatchObject({ streakDays: 0, bestStreak: 5 });
+  });
+
+  it('mantém a chama acesa quando a última conclusão foi ontem', async () => {
+    findUnique.mockResolvedValue(
+      row({ streakDays: 5, bestStreak: 5, lastCompletionDate: daysAgo(1) }),
+    );
+
+    const result = await service.get('user1');
+
+    expect(result).toMatchObject({ streakDays: 5, bestStreak: 5 });
+  });
+
+  it('mantém a chama acesa quando já houve conclusão hoje', async () => {
+    findUnique.mockResolvedValue(
+      row({ streakDays: 5, bestStreak: 5, lastCompletionDate: daysAgo(0) }),
+    );
+
+    const result = await service.get('user1');
+
+    expect(result).toMatchObject({ streakDays: 5, bestStreak: 5 });
+  });
+});
